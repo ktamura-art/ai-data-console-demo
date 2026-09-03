@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>統合データベース AI活用コンソール</title>
+<style>
+  :root{
+    --navy:#16337e; --navy2:#0e2560; --blue:#2563eb; --blue2:#4b8bf5;
+    --lblue:#e9f1fa; --pale:#f4f7fc;
+    --orange:#e8590c; --orangebg:#fcf0e4; --red:#c83228; --redbg:#fbecea;
+    --green:#217a3c; --greenbg:#e9f4eb; --yellow:#f0b429; --yellowbg:#fdf5e3;
+    --ink:#1f2937; --gray:#5f6b7a; --border:#d7dfeb; --bg:#f5f7fb; --white:#fff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{font-family:"Segoe UI","Meiryo","Hiragino Kaku Gothic ProN",sans-serif; background:var(--bg); color:var(--ink); font-size:14px; line-height:1.6;}
+  button{font:inherit; cursor:pointer;}
+
+  /* ===== top bar ===== */
+  .topbar{height:52px; background:var(--navy); color:#fff; display:flex; align-items:center; padding:0 18px; gap:14px; position:sticky; top:0; z-index:40;}
+  .topbar .mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--blue2),#8ab4ff);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+  .topbar .brand{font-weight:700; font-size:15px; letter-spacing:.02em;}
+  .topbar .brand small{display:block; font-size:10.5px; font-weight:400; color:#b9cbea; letter-spacing:0;}
+  .topbar .env{font-size:11px; background:rgba(255,255,255,.16); padding:3px 10px; border-radius:11px;}
+  .userbox{margin-left:auto; display:flex; align-items:center; gap:10px;}
+  .userbox label{font-size:11px; color:#b9cbea;}
+  .userbox select{font:inherit; font-size:12.5px; padding:5px 8px; border-radius:5px; border:1px solid rgba(255,255,255,.3); background:rgba(255,255,255,.12); color:#fff;}
+  .userbox select option{color:var(--ink);}
+  .avatar{width:30px;height:30px;border-radius:50%;background:#8ab4ff;color:var(--navy2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+
+  /* ===== layout ===== */
+  .shell{display:flex; min-height:calc(100vh - 52px);}
+  .side{width:222px; background:#fff; border-right:1px solid var(--border); padding:14px 10px 30px; flex:none;}
+  .side h4{font-size:10.5px; color:var(--gray); letter-spacing:.08em; margin:16px 8px 6px;}
+  .side .nav{display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:7px; font-size:13px; cursor:pointer; color:#33405a; border:0; background:none; width:100%; text-align:left;}
+  .side .nav:hover{background:var(--pale);}
+  .side .nav.on{background:var(--lblue); color:var(--navy); font-weight:700;}
+  .side .nav .ic{width:20px; text-align:center; font-size:14px;}
+  .side .nav[hidden]{display:none;}
+  .side .note{margin:18px 8px 0; font-size:11px; color:var(--gray); background:var(--pale); border:1px solid var(--border); border-radius:7px; padding:9px 10px; line-height:1.55;}
+  .main{flex:1; min-width:0; padding:18px 24px 70px;}
+
+  .pagehead{margin-bottom:14px;}
+  .pagehead h1{font-size:19px; color:var(--navy);}
+  .pagehead p{font-size:12.5px; color:var(--gray); margin-top:3px;}
+  .page[hidden]{display:none;}
+
+  .banner{background:var(--lblue); border:1px solid #c4d8f0; border-radius:7px; padding:10px 14px; font-size:12.5px; color:#17427c; display:flex; gap:9px; margin-bottom:16px;}
+  .banner b{color:var(--navy);}
+  .banner.warn{background:var(--yellowbg); border-color:#e8cf94; color:#7a5a10;}
+
+  /* ===== cards / grids ===== */
+  .card{background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px;}
+  .card > h3{font-size:13.5px; color:var(--navy); margin-bottom:2px;}
+  .card > h3 + .sub{font-size:11.5px; color:var(--gray); margin-bottom:12px;}
+  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .grid32{display:grid; grid-template-columns:1.35fr 1fr; gap:16px;}
+  .stack{display:flex; flex-direction:column; gap:16px;}
+  @media(max-width:1180px){.grid4{grid-template-columns:repeat(2,1fr);} .grid2,.grid32{grid-template-columns:1fr;}}
+
+  .kpi{background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; position:relative; overflow:hidden;}
+  .kpi::before{content:""; position:absolute; left:0; top:0; width:100%; height:4px; background:var(--navy);}
+  .kpi.b::before{background:var(--blue);} .kpi.o::before{background:var(--orange);} .kpi.g::before{background:var(--green);}
+  .kpi .lab{font-size:11.5px; color:var(--gray);}
+  .kpi .val{font-size:29px; font-weight:700; color:var(--navy); line-height:1.25; letter-spacing:-.01em;}
+  .kpi.o .val{color:var(--orange);} .kpi.g .val{color:var(--green);}
+  .kpi .val span{font-size:14px; font-weight:600; margin-left:2px;}
+  .kpi .delta{font-size:11.5px; color:var(--green);}
+  .kpi .delta.down{color:var(--red);}
+
+  /* ===== charts ===== */
+  .bars{display:flex; align-items:flex-end; gap:10px; height:158px; padding-top:6px;}
+  .bars .b{flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px; height:100%;}
+  .bars .bar{width:100%; background:linear-gradient(180deg,var(--blue2),var(--blue)); border-radius:4px 4px 0 0; min-height:3px;}
+  .bars .b.hl .bar{background:linear-gradient(180deg,#f6a469,var(--orange));}
+  .bars .n{font-size:10.5px; color:var(--gray);}
+  .bars .v{font-size:10.5px; color:var(--navy); font-weight:700;}
+
+  .hbar{display:grid; grid-template-columns:132px 1fr 62px; align-items:center; gap:10px; margin-bottom:9px; font-size:12.5px;}
+  .hbar .track{background:var(--pale); border-radius:5px; height:15px; overflow:hidden;}
+  .hbar .fill{height:100%; background:var(--blue); border-radius:5px;}
+  .hbar .fill.o{background:var(--orange);} .hbar .fill.g{background:var(--green);} .hbar .fill.n{background:var(--navy);}
+  .hbar .num{text-align:right; color:var(--navy); font-weight:700;}
+
+  /* ===== tables ===== */
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  thead th{background:var(--navy); color:#fff; font-weight:700; text-align:left; padding:8px 11px; font-size:12px; white-space:nowrap;}
+  tbody td{border-bottom:1px solid var(--border); padding:8px 11px; vertical-align:middle;}
+  tbody tr:nth-child(even) td{background:var(--pale);}
+  tbody tr:hover td{background:var(--lblue);}
+  td.num, th.num{text-align:right; font-variant-numeric:tabular-nums;}
+  td.ctr, th.ctr{text-align:center;}
+
+  .pill{display:inline-block; font-size:11px; padding:2px 9px; border-radius:11px; font-weight:700; white-space:nowrap;}
+  .pill.ok{background:var(--greenbg); color:var(--green);}
+  .pill.mid{background:var(--yellowbg); color:#8a6410;}
+  .pill.off{background:#eef1f6; color:var(--gray);}
+  .pill.on{background:var(--lblue); color:var(--navy);}
+  .pill.hot{background:var(--orangebg); color:var(--orange);}
+
+  .mini{display:inline-block; width:74px; height:7px; background:var(--pale); border-radius:4px; overflow:hidden; vertical-align:middle; margin-right:7px;}
+  .mini i{display:block; height:100%; background:var(--blue);}
+
+  /* ===== chat ===== */
+  .chatwrap{display:grid; grid-template-columns:1fr 318px; gap:16px; align-items:start;}
+  @media(max-width:1180px){.chatwrap{grid-template-columns:1fr;}}
+  .chatcard{background:#fff; border:1px solid var(--border); border-radius:10px; display:flex; flex-direction:column; min-height:565px;}
+  .chatlog{padding:18px; flex:1; display:flex; flex-direction:column; gap:17px; max-height:66vh; overflow-y:auto;}
+  .msg{display:flex; gap:11px;}
+  .msg .ava{width:30px;height:30px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+  .msg.user .ava{background:#dbe6f7; color:var(--navy);}
+  .msg.ai .ava{background:var(--navy); color:#fff;}
+  .bubble{flex:1; min-width:0;}
+  .msg.user .bubble{background:var(--pale); border:1px solid var(--border); border-radius:0 9px 9px 9px; padding:9px 13px; font-size:13.5px;}
+  .msg.ai .bubble{font-size:13.5px;}
+  .steps{background:var(--pale); border:1px solid var(--border); border-radius:8px; padding:9px 12px; margin-bottom:11px; font-size:11.5px; color:var(--gray);}
+  .steps .s{display:flex; gap:8px; padding:2px 0;}
+  .steps .s b{color:var(--navy); font-weight:700;}
+  .steps .s .tick{color:var(--green); font-weight:700;}
+  .ansbox{border:1px solid var(--border); border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:11px 14px; background:#fff;}
+  .ansbox p + .tblwrap{margin-top:10px;}
+  .tblwrap{border:1px solid var(--border); border-radius:7px; overflow:hidden; overflow-x:auto;}
+  .tblwrap table{font-size:12px;}
+  .tblwrap thead th{background:#eaf0f9; color:var(--navy); border-bottom:1px solid var(--border);}
+  .tblwrap tbody td{padding:6px 10px;}
+  .src{margin-top:9px; font-size:11px; color:var(--gray);}
+  .src b{color:var(--navy);}
+  details.sql{margin-top:9px;}
+  details.sql summary{font-size:11.5px; color:var(--blue); cursor:pointer;}
+  details.sql pre{margin-top:7px; background:#0e1b34; color:#cfe0ff; padding:11px 13px; border-radius:7px; font-size:11.5px; line-height:1.6; overflow-x:auto; font-family:"SFMono-Regular",Consolas,Menlo,monospace;}
+  .chatinput{border-top:1px solid var(--border); padding:12px 16px; display:flex; gap:9px; align-items:center;}
+  .chatinput input{flex:1; font:inherit; font-size:13px; padding:9px 12px; border:1px solid var(--border); border-radius:7px; background:var(--pale); color:var(--gray);}
+  .chatinput button{background:var(--navy); color:#fff; border:0; border-radius:7px; padding:9px 18px; font-size:13px; font-weight:700;}
+  .qlist{display:flex; flex-direction:column; gap:8px;}
+  .q{text-align:left; background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:12.5px; color:#33405a; line-height:1.5;}
+  .q:hover{border-color:var(--blue); background:var(--lblue); color:var(--navy);}
+  .q.on{border-color:var(--navy); background:var(--lblue); color:var(--navy); font-weight:700;}
+  .q .tag{display:block; font-size:10.5px; color:var(--orange); font-weight:700; margin-bottom:2px;}
+
+  /* ===== agent admin ===== */
+  .agrid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:1180px){.agrid{grid-template-columns:1fr;}}
+  .agent{background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; cursor:pointer;}
+  .agent:hover{border-color:var(--blue);}
+  .agent.on{border-color:var(--navy); box-shadow:0 0 0 2px rgba(22,51,126,.10);}
+  .agent .row1{display:flex; align-items:center; gap:9px;}
+  .agent .ic{width:30px;height:30px;border-radius:7px;background:var(--lblue);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;}
+  .agent h4{font-size:13.5px; color:var(--navy); flex:1;}
+  .agent .meta{font-size:11.5px; color:var(--gray); margin-top:7px; line-height:1.6;}
+  .agent .meta b{color:#33405a;}
+  .toggle{width:38px; height:21px; border-radius:11px; background:var(--green); position:relative; border:0; flex:none;}
+  .toggle::after{content:""; position:absolute; top:2px; right:2px; width:17px; height:17px; border-radius:50%; background:#fff;}
+  .toggle.off{background:#c3ccda;}
+  .toggle.off::after{left:2px; right:auto;}
+
+  .kv{display:grid; grid-template-columns:118px 1fr; gap:7px 12px; font-size:12.5px;}
+  .kv dt{color:var(--gray);}
+  .kv dd{color:var(--ink);}
+  .prompt{background:#0e1b34; color:#cfe0ff; border-radius:8px; padding:12px 14px; font-size:11.5px; line-height:1.75; white-space:pre-wrap; font-family:"SFMono-Regular",Consolas,Menlo,monospace; margin-top:9px;}
+
+  .filters{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+  .filters button{background:#fff; border:1px solid var(--border); border-radius:16px; padding:5px 14px; font-size:12px; color:#33405a;}
+  .filters button.on{background:var(--navy); border-color:var(--navy); color:#fff; font-weight:700;}
+
+  .legend{font-size:11px; color:var(--gray); margin-top:10px;}
+  .foot{margin-top:26px; font-size:11px; color:var(--gray); line-height:1.7;}
+  .stamp{position:fixed; right:14px; bottom:12px; font-size:10.5px; color:#93a0b2; background:rgba(255,255,255,.86); border:1px solid var(--border); border-radius:12px; padding:3px 11px; z-index:50;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="mark">AI</div>
+  <div class="brand">統合データベース AI活用コンソール<small>Integrated Data × AI Console</small></div>
+  <div class="env">開発環境</div>
+  <div class="userbox">
+    <label for="role">ログイン中</label>
+    <select id="role">
+      <option value="hq">本社 マーケティング部（管理者）</option>
+      <option value="master">中央営業所 AIマスター</option>
+      <option value="sales">中央営業所 営業担当</option>
+    </select>
+    <div class="avatar" id="avatar">本</div>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="side">
+    <h4>使う</h4>
+    <button class="nav on" data-page="dash"><span class="ic">▦</span>ダッシュボード</button>
+    <button class="nav" data-page="ask"><span class="ic">💬</span>AIデータ照会</button>
+    <h4 id="adminhead">管理する</h4>
+    <button class="nav" data-page="agents" data-admin="1"><span class="ic">🤖</span>エージェント管理</button>
+    <button class="nav" data-page="offices" data-admin="1"><span class="ic">🏢</span>営業所・AIマスター</button>
+    <button class="nav" data-page="usage" data-admin="1"><span class="ic">📈</span>利用状況・効果</button>
+    <button class="nav" data-page="data" data-admin="1"><span class="ic">🗄</span>データソース連携</button>
+    <div class="note" id="scopenote">
+      <b>参照できる範囲</b><br>全営業所・全項目<br>（本社マーケティング部の権限）
+    </div>
+  </nav>
+
+  <main class="main">
+
+  <!-- ============ ダッシュボード ============ -->
+  <section class="page" id="page-dash">
+    <div class="pagehead">
+      <h1>ダッシュボード</h1>
+      <p>統合データベースに対するAI活用の全体状況　／　2028年3月度</p>
+    </div>
+    <div class="banner">
+      <span>ℹ</span><div>統合データベース（BigQuery）と接続済みです。最終同期：<b>2028/03/14 06:00</b>　対象テーブル 18／18 正常</div>
+    </div>
+
+    <div class="grid4" style="margin-bottom:16px;">
+      <div class="kpi"><div class="lab">稼働中のAIマスター</div><div class="val">38<span>名</span></div><div class="delta">目標40名に対し 95%</div></div>
+      <div class="kpi b"><div class="lab">今月の質問数</div><div class="val">4,812<span>件</span></div><div class="delta">前月比 +18.4%</div></div>
+      <div class="kpi o"><div class="lab">削減時間（試算）</div><div class="val">1,240<span>時間</span></div><div class="delta">前月比 +212時間</div></div>
+      <div class="kpi g"><div class="lab">展開済み営業所</div><div class="val">16<span>／16</span></div><div class="delta">2028年2月に全所展開が完了</div></div>
+    </div>
+
+    <div class="grid32" style="margin-bottom:16px;">
+      <div class="card">
+        <h3>質問数の推移</h3><div class="sub">AIマスター育成の完了（2027年9月）以降、営業所展開に伴って増加</div>
+        <div class="bars">
+          <div class="b"><span class="v">312</span><div class="bar" style="height:9%"></div><span class="n">27/10</span></div>
+          <div class="b"><span class="v">764</span><div class="bar" style="height:20%"></div><span class="n">11月</span></div>
+          <div class="b"><span class="v">1,205</span><div class="bar" style="height:31%"></div><span class="n">12月</span></div>
+          <div class="b"><span class="v">2,140</span><div class="bar" style="height:47%"></div><span class="n">28/1</span></div>
+          <div class="b"><span class="v">4,064</span><div class="bar" style="height:78%"></div><span class="n">2月</span></div>
+          <div class="b hl"><span class="v">4,812</span><div class="bar" style="height:96%"></div><span class="n">3月</span></div>
+        </div>
+        <div class="legend">※ 質問数＝AIデータ照会での問い合わせ件数（サンプルデータ）</div>
+      </div>
+      <div class="card">
+        <h3>エージェント別の利用比率</h3><div class="sub">今月の質問 4,812件の内訳</div>
+        <div class="hbar"><span>顧客データ照会</span><div class="track"><div class="fill n" style="width:46%"></div></div><span class="num">46%</span></div>
+        <div class="hbar"><span>優先アプローチ抽出</span><div class="track"><div class="fill" style="width:27%"></div></div><span class="num">27%</span></div>
+        <div class="hbar"><span>提案トーク生成</span><div class="track"><div class="fill g" style="width:17%"></div></div><span class="num">17%</span></div>
+        <div class="hbar"><span>報告・資料作成</span><div class="track"><div class="fill o" style="width:10%"></div></div><span class="num">10%</span></div>
+        <div class="legend">※ 「顧客データ照会」が半数近くを占め、Excel加工の置き換えが進んでいる状態</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>直近のアクティビティ</h3><div class="sub">エージェントの更新・展開の履歴</div>
+        <table>
+          <thead><tr><th>日時</th><th>内容</th><th>実施者</th></tr></thead>
+          <tbody>
+            <tr><td>03/14 09:12</td><td>「優先アプローチ抽出」の条件を更新（契約年数の閾値）</td><td>本社マーケ</td></tr>
+            <tr><td>03/12 16:40</td><td>南営業所 AIマスター 2名を追加登録</td><td>本社マーケ</td></tr>
+            <tr><td>03/09 11:05</td><td>「提案トーク生成」に新料金プランの説明パターンを追加</td><td>本社マーケ</td></tr>
+            <tr><td>03/05 14:22</td><td>回答できなかった質問 12件をレビューし、用語辞書に反映</td><td>本社マーケ</td></tr>
+            <tr><td>03/01 08:00</td><td>統合データベースの月次同期（18テーブル）完了</td><td>システム</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>要対応</h3><div class="sub">推進側で手を打つべき項目</div>
+        <table>
+          <thead><tr><th>項目</th><th class="ctr">件数</th><th>状態</th></tr></thead>
+          <tbody>
+            <tr><td>回答できなかった質問（改善候補）</td><td class="num">12</td><td><span class="pill hot">要レビュー</span></td></tr>
+            <tr><td>今月まだ利用のないAIマスター</td><td class="num">2</td><td><span class="pill mid">フォロー要</span></td></tr>
+            <tr><td>利用率が50%を下回る営業所</td><td class="num">1</td><td><span class="pill mid">フォロー要</span></td></tr>
+            <tr><td>同期エラーのあるテーブル</td><td class="num">0</td><td><span class="pill ok">正常</span></td></tr>
+            <tr><td>権限設定の未レビュー項目</td><td class="num">0</td><td><span class="pill ok">正常</span></td></tr>
+          </tbody>
+        </table>
+        <div class="legend">※ 「回答できなかった質問」を毎月潰していくことが、定着の実務になります</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AIデータ照会 ============ -->
+  <section class="page" id="page-ask" hidden>
+    <div class="pagehead">
+      <h1>AIデータ照会</h1>
+      <p>統合データベースに日本語で質問すると、集計した結果が返ります　／　Excelでの抽出・加工を挟みません</p>
+    </div>
+    <div class="banner" id="askbanner">
+      <span>ℹ</span><div>参照範囲：<b>全営業所・全項目</b>　権限はAIへの指示ではなく、<b>検索時のフィルタ</b>として適用されます</div>
+    </div>
+
+    <div class="chatwrap">
+      <div class="chatcard">
+        <div class="chatlog" id="chatlog"></div>
+        <div class="chatinput">
+          <input id="qinput" placeholder="質問を入力…（このデモでは右の質問例からお選びください）" readonly>
+          <button id="qsend">送信</button>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <h3>質問例</h3><div class="sub">クリックすると回答が表示されます</div>
+          <div class="qlist" id="qlist"></div>
+        </div>
+        <div class="card">
+          <h3>この画面のポイント</h3>
+          <div style="font-size:12px; color:var(--gray); line-height:1.75;">
+            ■ 現場が触るのは「質問を書く」ところだけ<br>
+            ■ 回答には必ず<b>参照したテーブル</b>を表示<br>
+            ■ AIが生成したSQLを開いて確認できる<br>
+            ■ 権限外のデータは検索段階で除外される
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ エージェント管理 ============ -->
+  <section class="page" id="page-agents" hidden>
+    <div class="pagehead">
+      <h1>エージェント管理</h1>
+      <p>標準エージェントの公開範囲・参照データ・指示文を管理します</p>
+    </div>
+    <div class="banner">
+      <span>ℹ</span><div>フェーズ1で構築した<b>4つの標準エージェント</b>を、本社マーケティング部で一元管理します。営業所ごとの作り込みは、この標準をコピーして行います。</div>
+    </div>
+
+    <div class="agrid" id="agentgrid" style="margin-bottom:16px;"></div>
+
+    <div class="card">
+      <h3 id="agdetail-title">エージェントの設定</h3><div class="sub" id="agdetail-sub">カードを選択すると詳細が表示されます</div>
+      <div class="grid2">
+        <div>
+          <dl class="kv" id="agdetail-kv"></dl>
+        </div>
+        <div>
+          <div style="font-size:11.5px; color:var(--gray); font-weight:700;">AIへの指示文（プロンプト）</div>
+          <div class="prompt" id="agdetail-prompt"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 営業所・AIマスター ============ -->
+  <section class="page" id="page-offices" hidden>
+    <div class="pagehead">
+      <h1>営業所・AIマスター管理</h1>
+      <p>16営業所の展開状況とAIマスターの配置　／　各所1〜2名＋本社で計38名</p>
+    </div>
+    <div class="grid4" style="margin-bottom:16px;">
+      <div class="kpi"><div class="lab">展開済み営業所</div><div class="val">16<span>／16</span></div><div class="delta">2028年2月完了</div></div>
+      <div class="kpi b"><div class="lab">AIマスター</div><div class="val">38<span>名</span></div><div class="delta">営業所32名＋本社6名</div></div>
+      <div class="kpi o"><div class="lab">登録ユーザー</div><div class="val">486<span>名</span></div><div class="delta">営業担当のうち 97%</div></div>
+      <div class="kpi g"><div class="lab">今月の平均利用率</div><div class="val">72<span>%</span></div><div class="delta">前月比 +9pt</div></div>
+    </div>
+
+    <div class="card">
+      <h3>営業所一覧</h3><div class="sub">利用率＝当月に1回以上AIデータ照会を使った登録ユーザーの割合</div>
+      <div class="filters" id="offfilters">
+        <button class="on" data-f="all">すべて（16）</button>
+        <button data-f="ok">順調（12）</button>
+        <button data-f="mid">フォロー要（3）</button>
+        <button data-f="new">立ち上げ中（1）</button>
+      </div>
+      <table>
+        <thead><tr><th>営業所</th><th class="ctr">AIマスター</th><th class="num">登録ユーザー</th><th>今月の利用率</th><th class="num">今月の質問数</th><th>最終利用</th><th class="ctr">状態</th></tr></thead>
+        <tbody id="offbody"></tbody>
+      </table>
+      <div class="legend">※ 数値はすべて架空のサンプルです</div>
+    </div>
+  </section>
+
+  <!-- ============ 利用状況・効果 ============ -->
+  <section class="page" id="page-usage" hidden>
+    <div class="pagehead">
+      <h1>利用状況・効果測定</h1>
+      <p>「使われているか」を数字で見て、次の手を決めるための画面です</p>
+    </div>
+    <div class="banner warn">
+      <span>⚠</span><div>削減時間は<b>試算値</b>です。「1件の質問＝従来15分のデータ収集・加工に相当」という前提で自動計算しています。前提値は設定画面で変更できます。</div>
+    </div>
+
+    <div class="grid32" style="margin-bottom:16px;">
+      <div class="card">
+        <h3>営業所別の利用率</h3><div class="sub">今月（3月）／ 全社平均 72%</div>
+        <div id="usagebars"></div>
+        <div class="legend">※ 利用率が低い営業所は、AIマスターへのフォロー対象として自動で抽出されます</div>
+      </div>
+      <div class="card">
+        <h3>質問カテゴリの内訳</h3><div class="sub">何に使われているか</div>
+        <div class="hbar"><span>契約・顧客の照会</span><div class="track"><div class="fill n" style="width:38%"></div></div><span class="num">38%</span></div>
+        <div class="hbar"><span>訪問先の絞り込み</span><div class="track"><div class="fill" style="width:24%"></div></div><span class="num">24%</span></div>
+        <div class="hbar"><span>実績・進捗の集計</span><div class="track"><div class="fill" style="width:16%"></div></div><span class="num">16%</span></div>
+        <div class="hbar"><span>提案の下ごしらえ</span><div class="track"><div class="fill g" style="width:13%"></div></div><span class="num">13%</span></div>
+        <div class="hbar"><span>報告書・資料作成</span><div class="track"><div class="fill o" style="width:9%"></div></div><span class="num">9%</span></div>
+        <div class="legend" style="margin-top:14px;">
+          <b style="color:var(--navy)">削減時間の試算</b><br>
+          4,812件 × 15分 ＝ 1,203時間／月<br>
+          ＋ 報告書作成分 37時間 ＝ <b style="color:var(--orange)">1,240時間／月</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>回答できなかった質問（改善候補）</h3><div class="sub">AIが答えられなかった質問を残し、毎月レビューして潰していきます</div>
+      <table>
+        <thead><tr><th>質問</th><th>原因の分類</th><th>対応方針</th><th class="ctr">件数</th><th class="ctr">状態</th></tr></thead>
+        <tbody>
+          <tr><td>「値引き後の実質単価」で絞り込みたい</td><td>統合DBに該当項目がない</td><td>販売管理側の項目追加を依頼</td><td class="num">4</td><td><span class="pill hot">要検討</span></td></tr>
+          <tr><td>「切替済み」の定義が担当ごとに違う</td><td>用語のゆれ</td><td>用語辞書に定義を登録</td><td class="num">3</td><td><span class="pill on">対応中</span></td></tr>
+          <tr><td>競合他社の料金と比較したい</td><td>社外データのため対象外</td><td>スコープ外として明示</td><td class="num">3</td><td><span class="pill off">対象外</span></td></tr>
+          <tr><td>過去5年分の推移を出したい</td><td>統合DBの保持期間が3年</td><td>保持期間の見直しを検討</td><td class="num">2</td><td><span class="pill hot">要検討</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ データソース連携 ============ -->
+  <section class="page" id="page-data" hidden>
+    <div class="pagehead">
+      <h1>データソース連携</h1>
+      <p>統合データベース側は読み取り専用で参照します　／　既存システムには変更を加えません</p>
+    </div>
+    <div class="banner">
+      <span>ℹ</span><div>AIが直接触るのは<b>統合データベース（BigQuery）だけ</b>です。各基幹システムからの連携は、統合データベース側の既存フローをそのまま利用します。</div>
+    </div>
+    <div class="card">
+      <h3>参照テーブル</h3><div class="sub">エージェントが参照する統合データベース内のテーブル（抜粋）</div>
+      <table>
+        <thead><tr><th>テーブル</th><th>内容</th><th>更新頻度</th><th>権限の扱い</th><th class="ctr">状態</th></tr></thead>
+        <tbody>
+          <tr><td>customer_master</td><td>顧客マスタ（世帯・契約者情報）</td><td>日次 06:00</td><td>営業所コードでフィルタ</td><td><span class="pill ok">正常</span></td></tr>
+          <tr><td>contract</td><td>契約・料金プラン</td><td>日次 06:00</td><td>営業所コードでフィルタ</td><td><span class="pill ok">正常</span></td></tr>
+          <tr><td>usage_monthly</td><td>月次の使用量・請求</td><td>月次 締め後</td><td>金額列は管理者のみ</td><td><span class="pill ok">正常</span></td></tr>
+          <tr><td>inspection</td><td>保安点検の実施履歴</td><td>日次 06:00</td><td>営業所コードでフィルタ</td><td><span class="pill ok">正常</span></td></tr>
+          <tr><td>churn_log</td><td>解約・切替の履歴</td><td>日次 06:00</td><td>営業所コードでフィルタ</td><td><span class="pill ok">正常</span></td></tr>
+          <tr><td>campaign</td><td>新料金プラン・施策マスタ</td><td>随時</td><td>全社共通</td><td><span class="pill ok">正常</span></td></tr>
+        </tbody>
+      </table>
+      <div class="legend">※ 実際の項目名・粒度・更新頻度は、要件定義フェーズで統合データベースの仕様を確認して確定します</div>
+    </div>
+
+    <div class="foot">
+      本デモはUIシミュレーションです。実際のデータベースには接続していません。表示される営業所名・数値・顧客情報はすべて架空のサンプルです。
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<div class="stamp">サンプルデータ</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= ページ切り替え ================= */
+  var navs = Array.prototype.slice.call(document.querySelectorAll(".side .nav"));
+  function show(id){
+    navs.forEach(function(n){ n.classList.toggle("on", n.dataset.page === id); });
+    Array.prototype.forEach.call(document.querySelectorAll(".page"), function(p){
+      p.hidden = (p.id !== "page-" + id);
+    });
+    window.scrollTo(0,0);
+  }
+  navs.forEach(function(n){ n.addEventListener("click", function(){ show(n.dataset.page); }); });
+
+  /* ================= 権限（ロール切り替え） ================= */
+  var ROLES = {
+    hq:     {av:"本", office:null, scope:"全営業所・全項目",
+             note:"全営業所・全項目<br>（本社マーケティング部の権限）", admin:true,  mask:false},
+    master: {av:"中", office:"中央営業所", scope:"中央営業所・全項目",
+             note:"中央営業所のみ<br>（AIマスターの権限）", admin:true, mask:false},
+    sales:  {av:"営", office:"中央営業所", scope:"中央営業所（金額列は非表示）",
+             note:"中央営業所のみ<br>金額に関する列は参照不可", admin:false, mask:true}
+  };
+  var roleSel = document.getElementById("role");
+  var curRole = "hq";
+  function applyRole(){
+    var r = ROLES[curRole];
+    document.getElementById("avatar").textContent = r.av;
+    document.getElementById("scopenote").innerHTML = "<b>参照できる範囲</b><br>" + r.note;
+    document.getElementById("askbanner").innerHTML =
+      '<span>ℹ</span><div>参照範囲：<b>' + r.scope + '</b>　権限はAIへの指示ではなく、<b>検索時のフィルタ</b>として適用されます</div>';
+    navs.forEach(function(n){ if(n.dataset.admin){ n.hidden = !r.admin; } });
+    document.getElementById("adminhead").hidden = !r.admin;
+    var cur = document.querySelector(".side .nav.on");
+    if(cur && cur.hidden){ show("dash"); }
+    renderChat();
+  }
+  roleSel.addEventListener("change", function(){ curRole = roleSel.value; applyRole(); });
+
+  /* ================= AIデータ照会 ================= */
+  var Q = [
+    {
+      tag:"顧客データ照会",
+      q:"先月解約した世帯のうち、新料金プランの対象になるのは何件？",
+      steps:["質問を解析（対象期間＝2028年2月／条件＝解約＋新料金対象）",
+             "参照範囲を判定（{scope}）",
+             "統合データベースを照会（churn_log × contract × campaign）",
+             "集計して結果を整形"],
+      lead:"2028年2月に解約された世帯は <b>218件</b>、うち新料金プランの適用条件を満たすのは <b>96件</b>（44.0%）です。営業所別の内訳は次のとおりです。",
+      leadScoped:"2028年2月に中央営業所で解約された世帯は <b>41件</b>、うち新料金プランの適用条件を満たすのは <b>19件</b>（46.3%）です。",
+      cols:["営業所","解約件数","うち新料金対象","対象率","平均契約年数","年間影響額"],
+      moneyCols:[5],
+      rows:[["中央営業所","41","19","46.3%","7.2年","▲482万円"],
+            ["東営業所","36","17","47.2%","6.8年","▲421万円"],
+            ["北営業所","33","14","42.4%","9.1年","▲402万円"],
+            ["西営業所","29","12","41.4%","8.4年","▲338万円"],
+            ["南営業所","27","11","40.7%","7.9年","▲311万円"],
+            ["その他11営業所","52","23","44.2%","8.0年","▲604万円"]],
+      total:["合計","218","96","44.0%","7.8年","▲2,558万円"],
+      src:"churn_log（2028/03/14 06:00 同期）／ contract ／ campaign",
+      sql:"SELECT o.office_name,\n       COUNT(*) AS churn_cnt,\n       COUNTIF(c.plan_eligible) AS target_cnt,\n       ROUND(COUNTIF(c.plan_eligible)/COUNT(*)*100,1) AS target_rate\nFROM `core.churn_log` AS l\nJOIN `core.contract`  AS c USING (contract_id)\nJOIN `core.office`    AS o USING (office_cd)\nWHERE l.churn_date BETWEEN '2028-02-01' AND '2028-02-29'\n  AND c.plan_eligible = TRUE\nGROUP BY o.office_name\nORDER BY churn_cnt DESC"
+    },
+    {
+      tag:"優先アプローチ抽出",
+      q:"今月まだ訪問していない顧客から、優先的に回るべき先を出して",
+      steps:["質問を解析（条件＝今月未訪問／優先度の高い順）",
+             "参照範囲を判定（{scope}）",
+             "統合データベースを照会（customer_master × inspection × contract）",
+             "優先度スコアを算出して並べ替え"],
+      lead:"今月まだ訪問記録のない顧客のうち、<b>契約更新が近い・使用量が減少している・保安点検が近い</b>の3条件でスコアを付け、上位から並べました（全 <b>142件</b> 中の上位5件）。",
+      cols:["優先度","顧客ID","エリア","契約更新","直近3ヶ月の使用量","訪問すべき理由"],
+      rows:[["1","C-20418","中央3区","2028/04/12","前年比 -22%","更新が1ヶ月以内／使用量が大きく減少"],
+            ["2","C-11876","中央1区","2028/05/03","前年比 -18%","使用量減少が3ヶ月連続"],
+            ["3","C-30251","中央5区","2028/04/28","前年比 -6%","保安点検の予定日が近い"],
+            ["4","C-22940","中央2区","2028/06/15","前年比 -15%","近隣で切替が3件発生"],
+            ["5","C-19733","中央4区","2028/07/01","前年比 -11%","前回訪問から8ヶ月経過"]],
+      src:"customer_master ／ inspection ／ contract ／ churn_log",
+      sql:"WITH scored AS (\n  SELECT m.customer_id, m.area_cd, c.renewal_date,\n         u.yoy_rate, i.next_inspection_date,\n         (CASE WHEN DATE_DIFF(c.renewal_date, CURRENT_DATE(), DAY) <= 30 THEN 3 ELSE 0 END)\n       + (CASE WHEN u.yoy_rate < -0.15 THEN 3 ELSE 0 END)\n       + (CASE WHEN i.next_inspection_date <= DATE_ADD(CURRENT_DATE(), INTERVAL 30 DAY) THEN 2 ELSE 0 END)\n         AS priority\n  FROM `core.customer_master` AS m\n  LEFT JOIN `core.contract`   AS c USING (customer_id)\n  LEFT JOIN `core.usage_yoy`  AS u USING (customer_id)\n  LEFT JOIN `core.inspection` AS i USING (customer_id)\n  WHERE m.office_cd = @office_cd          -- 権限フィルタ\n    AND m.last_visit_month <> '2028-03'\n)\nSELECT * FROM scored ORDER BY priority DESC LIMIT 20"
+    },
+    {
+      tag:"実績の集計",
+      q:"今期の契約件数を、営業所別に前年同期と比べて",
+      steps:["質問を解析（期間＝2027年4月〜2028年2月／比較＝前年同期）",
+             "参照範囲を判定（{scope}）",
+             "統合データベースを照会（contract × office）",
+             "前年同期と対比して集計"],
+      lead:"今期（2027年4月〜2028年2月）の新規契約は <b>3,846件</b>、前年同期比 <b>+12.4%</b> です。新料金プランの投入以降、増加幅が広がっています。",
+      leadScoped:"中央営業所の今期（2027年4月〜2028年2月）の新規契約は <b>612件</b>、前年同期比 <b>+11.9%</b> です。",
+      cols:["営業所","今期","前年同期","増減","増減率"],
+      rows:[["中央営業所","612","547","+65","+11.9%"],
+            ["東営業所","548","471","+77","+16.3%"],
+            ["北営業所","497","462","+35","+7.6%"],
+            ["西営業所","463","418","+45","+10.8%"],
+            ["南営業所","441","396","+45","+11.4%"],
+            ["その他11営業所","1,285","1,128","+157","+13.9%"]],
+      total:["合計","3,846","3,422","+424","+12.4%"],
+      src:"contract（2028/03/14 06:00 同期）／ office",
+      sql:"SELECT o.office_name,\n       COUNTIF(c.contract_date BETWEEN '2027-04-01' AND '2028-02-29') AS this_term,\n       COUNTIF(c.contract_date BETWEEN '2026-04-01' AND '2027-02-28') AS last_term\nFROM `core.contract` AS c\nJOIN `core.office`   AS o USING (office_cd)\nWHERE c.contract_type = 'NEW'\nGROUP BY o.office_name\nORDER BY this_term DESC"
+    },
+    {
+      tag:"提案トーク生成",
+      q:"顧客C-20418への切替提案のトーク骨子を作って",
+      steps:["質問を解析（対象＝顧客C-20418／目的＝切替提案）",
+             "参照範囲を判定（{scope}）",
+             "統合データベースを照会（customer_master × contract × usage_monthly）",
+             "契約内容に合わせて説明の骨子を生成"],
+      lead:"顧客 <b>C-20418</b>（契約8年2ヶ月・4人世帯・直近3ヶ月の使用量が前年比 -22%）向けの骨子です。<b>そのまま読む台本ではなく、話す順番のメモ</b>としてお使いください。",
+      talk:[
+        "① 入り口：先日の保安点検のお礼＋「ご使用量が少し変わっていたので」と切り出す",
+        "② 事実の共有：直近3ヶ月の使用量が前年より約2割減っていることを、検針票の数字で示す",
+        "③ 提案：現在のプランのままだと基本料金の比率が上がるため、新料金プランなら月あたり約620円の差になる",
+        "④ 懸念への先回り：切替に伴う工事・費用は不要。契約は現行のまま継続できる",
+        "⑤ クロージング：次回の点検（4月）に合わせて手続きできる旨を伝え、その場で日程を押さえる"
+      ],
+      src:"customer_master ／ contract ／ usage_monthly ／ campaign（新料金プラン定義）",
+      sql:"SELECT m.customer_id, m.household_size, c.plan_cd, c.contract_start,\n       u.usage_yoy_3m, p.plan_name, p.base_fee, p.unit_price\nFROM `core.customer_master` AS m\nJOIN `core.contract`       AS c USING (customer_id)\nJOIN `core.usage_monthly`  AS u USING (customer_id)\nJOIN `core.campaign`       AS p ON p.plan_cd = 'NEW2027'\nWHERE m.customer_id = 'C-20418'"
+    }
+  ];
+
+  var qlist = document.getElementById("qlist");
+  var chatlog = document.getElementById("chatlog");
+  var curQ = 0;
+
+  Q.forEach(function(item, i){
+    var b = document.createElement("button");
+    b.className = "q" + (i === 0 ? " on" : "");
+    b.innerHTML = '<span class="tag">' + item.tag + '</span>' + item.q;
+    b.addEventListener("click", function(){
+      curQ = i;
+      Array.prototype.forEach.call(qlist.children, function(c, j){ c.classList.toggle("on", j === i); });
+      renderChat();
+    });
+    qlist.appendChild(b);
+  });
+  document.getElementById("qsend").addEventListener("click", renderChat);
+
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function renderChat(){
+    var item = Q[curQ], r = ROLES[curRole];
+    var mask = r.mask;
+
+    var steps = item.steps.map(function(s){
+      return '<div class="s"><span class="tick">✓</span><span>' + s.replace("{scope}", r.scope) + '</span></div>';
+    }).join("");
+
+    var body = "", scoped = false, dropped = false;
+    if(item.cols){
+      // 権限フィルタ①：営業所の範囲で行を絞り込む（検索時のフィルタ相当）
+      var cols = item.cols.slice(), data = item.rows.slice(), total = item.total;
+      if(r.office && data.length && data[0][0].indexOf("営業所") >= 0){
+        var hit = data.filter(function(row){ return row[0] === r.office; });
+        if(hit.length){ data = hit; total = null; scoped = true; }
+      }
+      // 権限フィルタ②：金額に関する列を落とす
+      if(mask && item.moneyCols){
+        var drop = item.moneyCols;
+        var keep = function(arr){ return arr.filter(function(v, i){ return drop.indexOf(i) < 0; }); };
+        cols = keep(cols); data = data.map(keep); if(total){ total = keep(total); }
+        dropped = true;
+      }
+      var head = cols.map(function(c, i){
+        return '<th class="' + (i === 0 ? "" : "num") + '">' + c + '</th>';
+      }).join("");
+      var rows = data.map(function(row){
+        return "<tr>" + row.map(function(v, i){
+          return '<td class="' + (i === 0 ? "" : "num") + '">' + esc(v) + '</td>';
+        }).join("") + "</tr>";
+      }).join("");
+      if(total){
+        rows += '<tr style="font-weight:700;background:#fdf5e3;">' + total.map(function(v, i){
+          return '<td class="' + (i === 0 ? "" : "num") + '">' + esc(v) + '</td>';
+        }).join("") + "</tr>";
+      }
+      body = '<div class="tblwrap"><table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    } else if(item.talk){
+      body = '<div style="background:var(--pale);border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:12.5px;line-height:1.9;">'
+           + item.talk.map(esc).join("<br>") + '</div>';
+    }
+
+    var msgs = [];
+    if(scoped){ msgs.push("参照できるのは<b>" + r.office + "</b>の範囲のみのため、他営業所の行は検索段階で除外されています。"); }
+    if(dropped){ msgs.push("営業担当の権限では<b>金額に関する列は表示されません</b>。"); }
+    var note = msgs.length
+      ? '<div class="banner warn" style="margin:11px 0 0;font-size:11.5px;"><span>⚠</span><div>' + msgs.join("<br>") + '</div></div>'
+      : "";
+
+    chatlog.innerHTML =
+      '<div class="msg user"><div class="ava">' + r.av + '</div><div class="bubble">' + esc(item.q) + '</div></div>' +
+      '<div class="msg ai"><div class="ava">AI</div><div class="bubble">' +
+        '<div class="steps">' + steps + '</div>' +
+        '<div class="ansbox"><p>' + (scoped && item.leadScoped ? item.leadScoped : item.lead) + '</p>' + body +
+          note +
+          '<div class="src">参照データ：<b>' + esc(item.src) + '</b></div>' +
+          '<details class="sql"><summary>AIが生成したクエリを表示</summary><pre>' + esc(item.sql) + '</pre></details>' +
+        '</div>' +
+      '</div></div>';
+  }
+
+  /* ================= エージェント管理 ================= */
+  var AGENTS = [
+    {ic:"🔍", name:"顧客データ照会", on:true,
+     use:"契約・顧客・使用量を横断して集計する", scope:"全営業所（権限フィルタ適用）",
+     tables:"customer_master / contract / usage_monthly / inspection",
+     out:"表形式＋件数の根拠", limit:"1回の出力は最大500行", updated:"2028/02/20",
+     uses:"2,213件／月",
+     prompt:"あなたは営業担当のデータ照会を助けるアシスタントです。\n\n・回答は必ず統合データベースの集計結果のみに基づくこと\n・推測で数値を補わない。該当データが無い場合は「該当なし」と答える\n・件数を答えるときは、必ず集計に使った条件を併記する\n・ログインユーザーの営業所コードの範囲外は参照しない"},
+    {ic:"🎯", name:"優先アプローチ抽出", on:true,
+     use:"訪問すべき顧客を条件付きで絞り込む", scope:"自営業所のみ",
+     tables:"customer_master / contract / usage_yoy / inspection / churn_log",
+     out:"優先度順のリスト＋理由", limit:"1回の出力は最大50件", updated:"2028/03/14",
+     uses:"1,299件／月",
+     prompt:"あなたは営業担当の訪問計画を助けるアシスタントです。\n\n・優先度は「契約更新の近さ」「使用量の減少」「保安点検の近さ」で算出する\n・必ず1件ごとに「訪問すべき理由」を1行で添える\n・個人の連絡先は出力しない（顧客IDのみ）\n・営業所コードの範囲外の顧客は対象に含めない"},
+    {ic:"💬", name:"提案トーク生成", on:true,
+     use:"契約内容に合わせた説明の骨子を作る", scope:"自営業所のみ",
+     tables:"customer_master / contract / usage_monthly / campaign",
+     out:"話す順番のメモ（5項目）", limit:"顧客1件ずつ", updated:"2028/03/09",
+     uses:"818件／月",
+     prompt:"あなたは営業担当の提案準備を助けるアシスタントです。\n\n・出力は「読み上げる台本」ではなく「話す順番のメモ」とする\n・料金の説明には、必ず統合データベース上の実際の契約内容を使う\n・断定的な優位表現、他社との比較は書かない\n・金額を示すときは前提条件（プラン名・期間）を必ず添える"},
+    {ic:"📄", name:"報告・資料作成", on:false,
+     use:"日報・営業所報告のドラフトを作る", scope:"全営業所（権限フィルタ適用）",
+     tables:"contract / churn_log / office",
+     out:"報告書のドラフト（本文）", limit:"月次・週次の定型のみ", updated:"2028/01/16",
+     uses:"482件／月",
+     prompt:"あなたは営業所の報告書作成を助けるアシスタントです。\n\n・数値は統合データベースの集計結果をそのまま使い、丸めない\n・所感や評価は書かず、事実と数値のみを並べる\n・前月比・前年同月比を必ず併記する\n・提出前に人が確認する前提の「ドラフト」であることを冒頭に書く"}
+  ];
+
+  var agentgrid = document.getElementById("agentgrid");
+  var curAgent = 0;
+
+  function renderAgents(){
+    agentgrid.innerHTML = "";
+    AGENTS.forEach(function(a, i){
+      var d = document.createElement("div");
+      d.className = "agent" + (i === curAgent ? " on" : "");
+      d.innerHTML =
+        '<div class="row1"><div class="ic">' + a.ic + '</div><h4>' + a.name + '</h4>' +
+        '<span class="pill ' + (a.on ? "ok" : "off") + '">' + (a.on ? "公開中" : "停止中") + '</span>' +
+        '<button class="toggle' + (a.on ? "" : " off") + '" data-i="' + i + '" aria-label="公開切り替え"></button></div>' +
+        '<div class="meta"><b>用途</b>：' + a.use + '<br><b>公開範囲</b>：' + a.scope +
+        '<br><b>今月の利用</b>：' + a.uses + '　<b>最終更新</b>：' + a.updated + '</div>';
+      d.addEventListener("click", function(e){
+        if(e.target.classList.contains("toggle")){
+          a.on = !a.on; renderAgents(); return;
+        }
+        curAgent = i; renderAgents();
+      });
+      agentgrid.appendChild(d);
+    });
+    var a = AGENTS[curAgent];
+    document.getElementById("agdetail-title").textContent = a.name + "　の設定";
+    document.getElementById("agdetail-sub").textContent = a.use;
+    document.getElementById("agdetail-kv").innerHTML =
+      "<dt>参照テーブル</dt><dd>" + a.tables + "</dd>" +
+      "<dt>公開範囲</dt><dd>" + a.scope + "</dd>" +
+      "<dt>出力形式</dt><dd>" + a.out + "</dd>" +
+      "<dt>利用の制限</dt><dd>" + a.limit + "</dd>" +
+      "<dt>今月の利用</dt><dd>" + a.uses + "</dd>" +
+      "<dt>最終更新</dt><dd>" + a.updated + "　本社マーケティング部</dd>";
+    document.getElementById("agdetail-prompt").textContent = a.prompt;
+  }
+
+  /* ================= 営業所一覧 ================= */
+  var OFFICES = [
+    ["中央営業所",2,58,88,712,"03/14","ok"],
+    ["東営業所",2,54,84,648,"03/14","ok"],
+    ["北営業所",2,46,79,502,"03/14","ok"],
+    ["西営業所",2,44,77,468,"03/13","ok"],
+    ["南営業所",2,41,81,455,"03/14","ok"],
+    ["中央第二営業所",2,38,74,391,"03/13","ok"],
+    ["東第二営業所",2,35,72,357,"03/14","ok"],
+    ["北第二営業所",2,32,69,318,"03/12","ok"],
+    ["西第二営業所",2,30,71,304,"03/13","ok"],
+    ["南第二営業所",2,28,66,262,"03/12","ok"],
+    ["湾岸営業所",2,26,64,238,"03/13","ok"],
+    ["内陸営業所",2,24,61,201,"03/11","ok"],
+    ["山手営業所",2,12,48,86,"03/07","mid"],
+    ["高原営業所",1,9,44,61,"03/06","mid"],
+    ["離島営業所",1,6,39,32,"03/04","mid"],
+    ["新設営業所",2,3,12,14,"03/10","new"]
+  ];
+
+  var offbody = document.getElementById("offbody");
+  var offFilter = "all";
+  function renderOffices(){
+    offbody.innerHTML = "";
+    OFFICES.filter(function(o){ return offFilter === "all" || o[6] === offFilter; }).forEach(function(o){
+      var st = o[6] === "ok" ? '<span class="pill ok">順調</span>'
+             : o[6] === "mid" ? '<span class="pill mid">フォロー要</span>'
+             : '<span class="pill on">立ち上げ中</span>';
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + o[0] + "</td>" +
+        '<td class="ctr">' + o[1] + "名</td>" +
+        '<td class="num">' + o[2] + "名</td>" +
+        "<td><span class='mini'><i style='width:" + o[3] + "%'></i></span>" + o[3] + "%</td>" +
+        '<td class="num">' + o[4].toLocaleString() + "</td>" +
+        "<td>" + o[5] + "</td>" +
+        '<td class="ctr">' + st + "</td>";
+      offbody.appendChild(tr);
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#offfilters button"), function(b){
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(document.querySelectorAll("#offfilters button"), function(x){ x.classList.remove("on"); });
+      b.classList.add("on"); offFilter = b.dataset.f; renderOffices();
+    });
+  });
+
+  /* ================= 利用状況（営業所別バー） ================= */
+  var ub = document.getElementById("usagebars");
+  OFFICES.slice(0).sort(function(a,b){ return b[3] - a[3]; }).slice(0,10).forEach(function(o){
+    var cls = o[3] >= 70 ? "n" : (o[3] >= 55 ? "" : "o");
+    var d = document.createElement("div");
+    d.className = "hbar";
+    d.innerHTML = "<span>" + o[0] + "</span><div class='track'><div class='fill " + cls +
+                  "' style='width:" + o[3] + "%'></div></div><span class='num'>" + o[3] + "%</span>";
+    ub.appendChild(d);
+  });
+
+  /* ================= 初期化 ================= */
+  renderAgents();
+  renderOffices();
+  applyRole();
+  renderChat();
+})();
+</script>
+</body>
+</html>
