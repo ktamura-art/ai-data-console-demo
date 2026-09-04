@@ -4,497 +4,811 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>統合データベース AI活用コンソール</title>
+<title>統合データベース × Microsoft 365 AI活用デモ</title>
 <style>
   :root{
-    --navy:#16337e; --navy2:#0e2560; --blue:#2563eb; --blue2:#4b8bf5;
-    --lblue:#e9f1fa; --pale:#f4f7fc;
-    --orange:#e8590c; --orangebg:#fcf0e4; --red:#c83228; --redbg:#fbecea;
-    --green:#217a3c; --greenbg:#e9f4eb; --yellow:#f0b429; --yellowbg:#fdf5e3;
-    --ink:#1f2937; --gray:#5f6b7a; --border:#d7dfeb; --bg:#f5f7fb; --white:#fff;
+    --ink:#242424; --ink2:#424242; --gray:#616161; --gray2:#8a8886; --line:#e1dfdd; --line2:#edebe9;
+    --bg:#faf9f8; --white:#fff;
+    --blue:#0f6cbd; --blue2:#115ea3; --bluebg:#eff6fc; --bluel:#c7e0f4;
+    --purple:#5b2e91; --purple2:#8661c5;
+    --pbiy:#f2c811; --pbi1:#118dff; --pbi2:#12239e; --pbi3:#e66c37; --pbi4:#6b007b; --pbi5:#744ec2; --pbi6:#0e7c66;
+    --green:#107c10; --greenbg:#dff6dd; --amber:#c19c00; --amberbg:#fff4ce; --red:#a4262c; --redbg:#fde7e9;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{height:100%;}
-  body{font-family:"Segoe UI","Meiryo","Hiragino Kaku Gothic ProN",sans-serif; background:var(--bg); color:var(--ink); font-size:14px; line-height:1.6;}
-  button{font:inherit; cursor:pointer;}
+  body{font-family:"Segoe UI","Yu Gothic UI","Meiryo","Hiragino Kaku Gothic ProN",sans-serif;
+       background:#201f1e; color:var(--ink); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;}
+  button{font:inherit; cursor:pointer; border:0; background:none; color:inherit;}
+  table{border-collapse:collapse; width:100%;}
 
-  /* ===== top bar ===== */
-  .topbar{height:52px; background:var(--navy); color:#fff; display:flex; align-items:center; padding:0 18px; gap:14px; position:sticky; top:0; z-index:40;}
-  .topbar .mark{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--blue2),#8ab4ff);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
-  .topbar .brand{font-weight:700; font-size:15px; letter-spacing:.02em;}
-  .topbar .brand small{display:block; font-size:10.5px; font-weight:400; color:#b9cbea; letter-spacing:0;}
-  .topbar .env{font-size:11px; background:rgba(255,255,255,.16); padding:3px 10px; border-radius:11px;}
-  .userbox{margin-left:auto; display:flex; align-items:center; gap:10px;}
-  .userbox label{font-size:11px; color:#b9cbea;}
-  .userbox select{font:inherit; font-size:12.5px; padding:5px 8px; border-radius:5px; border:1px solid rgba(255,255,255,.3); background:rgba(255,255,255,.12); color:#fff;}
-  .userbox select option{color:var(--ink);}
-  .avatar{width:30px;height:30px;border-radius:50%;background:#8ab4ff;color:var(--navy2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+  /* ============ デモ切替バー（デモ用の外枠。実製品にはありません） ============ */
+  .demobar{height:38px; background:#201f1e; color:#d2d0ce; display:flex; align-items:center;
+           gap:4px; padding:0 12px; font-size:12px; position:sticky; top:0; z-index:100;}
+  .demobar .lb{color:#8a8886; margin-right:6px; letter-spacing:.04em;}
+  .demobar button{padding:5px 13px; border-radius:4px; color:#d2d0ce; font-size:12.5px;}
+  .demobar button:hover{background:#323130; color:#fff;}
+  .demobar button.on{background:#fff; color:#201f1e; font-weight:600;}
+  .demobar .note{margin-left:auto; color:#797775; font-size:11px;}
+  .screen{background:var(--white); min-height:calc(100vh - 38px);}
+  .screen[hidden]{display:none;}
 
-  /* ===== layout ===== */
-  .shell{display:flex; min-height:calc(100vh - 52px);}
-  .side{width:222px; background:#fff; border-right:1px solid var(--border); padding:14px 10px 30px; flex:none;}
-  .side h4{font-size:10.5px; color:var(--gray); letter-spacing:.08em; margin:16px 8px 6px;}
-  .side .nav{display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:7px; font-size:13px; cursor:pointer; color:#33405a; border:0; background:none; width:100%; text-align:left;}
-  .side .nav:hover{background:var(--pale);}
-  .side .nav.on{background:var(--lblue); color:var(--navy); font-weight:700;}
-  .side .nav .ic{width:20px; text-align:center; font-size:14px;}
-  .side .nav[hidden]{display:none;}
-  .side .note{margin:18px 8px 0; font-size:11px; color:var(--gray); background:var(--pale); border:1px solid var(--border); border-radius:7px; padding:9px 10px; line-height:1.55;}
-  .main{flex:1; min-width:0; padding:18px 24px 70px;}
+  /* ============ M365 スイートバー（共通） ============ */
+  .suite{height:48px; background:#201f1e; color:#fff; display:flex; align-items:center; padding:0 8px; gap:2px;}
+  .suite .waffle{width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size:15px;}
+  .suite .waffle:hover{background:#323130;}
+  .suite .app{font-size:15px; font-weight:600; padding:0 10px 0 4px; white-space:nowrap;}
+  .suite .search{flex:1; max-width:520px; margin:0 12px; height:32px; background:#323130; border-radius:4px;
+                 display:flex; align-items:center; padding:0 11px; gap:8px; color:#c8c6c4; font-size:13px;}
+  .suite .right{margin-left:auto; display:flex; align-items:center; gap:2px;}
+  .suite .ib{width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size:15px;}
+  .suite .ib:hover{background:#323130;}
+  .suite .me{width:32px; height:32px; border-radius:50%; background:#8661c5; color:#fff; display:flex;
+             align-items:center; justify-content:center; font-size:12.5px; font-weight:600; margin-left:6px;}
 
-  .pagehead{margin-bottom:14px;}
-  .pagehead h1{font-size:19px; color:var(--navy);}
-  .pagehead p{font-size:12.5px; color:var(--gray); margin-top:3px;}
-  .page[hidden]{display:none;}
+  /* ============ 全体構成 ============ */
+  .arch{padding:26px 34px 60px; background:var(--bg); min-height:calc(100vh - 86px);}
+  .arch h1{font-size:22px; font-weight:600; color:var(--ink);}
+  .arch .lead{color:var(--gray); font-size:13.5px; margin:4px 0 22px;}
+  .flowrow{display:grid; grid-template-columns:1fr 44px 1fr 44px 1.25fr; align-items:stretch; gap:0; margin-bottom:18px;}
+  .fbox{background:#fff; border:1px solid var(--line); border-radius:8px; padding:15px 17px;}
+  .fbox .cap{font-size:11px; color:var(--gray2); letter-spacing:.06em; font-weight:600;}
+  .fbox h3{font-size:15px; margin:3px 0 8px; color:var(--ink);}
+  .fbox ul{list-style:none; font-size:12.5px; color:var(--ink2); line-height:1.85;}
+  .fbox ul li::before{content:"・"; color:var(--gray2);}
+  .fbox.gcp{border-top:3px solid #4285f4;}
+  .fbox.ms{border-top:3px solid var(--blue);}
+  .fbox.people{border-top:3px solid var(--green);}
+  .arw{display:flex; align-items:center; justify-content:center; color:#a19f9d; font-size:20px;}
+  .apps{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .appcard{background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 13px;}
+  .appcard .ttl{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600;}
+  .appcard .ic{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;}
+  .appcard p{font-size:11.5px; color:var(--gray); margin-top:6px; line-height:1.6;}
+  .caveat{background:var(--amberbg); border:1px solid #f0d999; border-radius:8px; padding:13px 16px; font-size:12.5px; color:#6b5410; line-height:1.75;}
+  .caveat b{color:#4a3a0a;}
+  .caveat + .caveat{margin-top:10px;}
+  .arch h4{font-size:13px; margin:22px 0 9px; color:var(--ink);}
 
-  .banner{background:var(--lblue); border:1px solid #c4d8f0; border-radius:7px; padding:10px 14px; font-size:12.5px; color:#17427c; display:flex; gap:9px; margin-bottom:16px;}
-  .banner b{color:var(--navy);}
-  .banner.warn{background:var(--yellowbg); border-color:#e8cf94; color:#7a5a10;}
+  /* ============ Copilot Studio ============ */
+  .cs{display:flex; min-height:calc(100vh - 86px); background:#faf9f8;}
+  .csrail{width:220px; background:#fff; border-right:1px solid var(--line); padding:12px 8px; flex:none;}
+  .csrail .agent{display:flex; align-items:center; gap:9px; padding:8px 9px 14px;}
+  .csrail .agent .av{width:30px;height:30px;border-radius:7px;flex:none;
+      background:linear-gradient(135deg,#2670e8,#8661c5,#e3008c); display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;}
+  .csrail .agent b{font-size:13.5px;}
+  .csrail .agent small{display:block; font-size:11px; color:var(--gray); font-weight:400;}
+  .csrail button{display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:7px 10px;
+                 border-radius:4px; font-size:13px; color:var(--ink2);}
+  .csrail button:hover{background:var(--line2);}
+  .csrail button.on{background:var(--bluebg); color:var(--blue2); font-weight:600;}
+  .csrail button .i{width:16px; text-align:center;}
+  .csmain{flex:1; min-width:0; display:flex;}
+  .cswork{flex:1; min-width:0; padding:20px 26px 50px; overflow:auto;}
+  .cswork h1{font-size:19px; font-weight:600;}
+  .cswork .sub{color:var(--gray); font-size:12.5px; margin:3px 0 18px;}
+  .csbox{background:#fff; border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin-bottom:14px;}
+  .csbox h3{font-size:14px; font-weight:600; margin-bottom:3px;}
+  .csbox .hint{font-size:11.5px; color:var(--gray); margin-bottom:11px;}
+  .instr{background:#faf9f8; border:1px solid var(--line); border-radius:6px; padding:12px 14px;
+         font-size:12.5px; line-height:1.9; white-space:pre-wrap; color:var(--ink2);}
+  .msrow{display:flex; align-items:center; gap:11px; padding:9px 4px; border-bottom:1px solid var(--line2); font-size:12.5px;}
+  .msrow:last-child{border-bottom:0;}
+  .msrow .ic{width:26px;height:26px;border-radius:5px;background:var(--bluebg);color:var(--blue);
+             display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;}
+  .msrow .nm{font-weight:600; min-width:210px;}
+  .msrow .de{color:var(--gray); flex:1;}
+  .tagx{display:inline-block; font-size:10.5px; padding:1px 8px; border-radius:3px; font-weight:600; white-space:nowrap;}
+  .tagx.ok{background:var(--greenbg); color:var(--green);}
+  .tagx.pv{background:#f3e8fd; color:var(--purple);}
+  .tagx.pr{background:var(--amberbg); color:#8a6a00;}
+  .tagx.off{background:var(--line2); color:var(--gray);}
 
-  /* ===== cards / grids ===== */
-  .card{background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px;}
-  .card > h3{font-size:13.5px; color:var(--navy); margin-bottom:2px;}
-  .card > h3 + .sub{font-size:11.5px; color:var(--gray); margin-bottom:12px;}
-  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
-  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
-  .grid32{display:grid; grid-template-columns:1.35fr 1fr; gap:16px;}
-  .stack{display:flex; flex-direction:column; gap:16px;}
-  @media(max-width:1180px){.grid4{grid-template-columns:repeat(2,1fr);} .grid2,.grid32{grid-template-columns:1fr;}}
+  /* テストパネル / 公開チャット */
+  .cstest{width:392px; flex:none; background:#fff; border-left:1px solid var(--line); display:flex; flex-direction:column;}
+  .cstest .th{height:46px; display:flex; align-items:center; gap:9px; padding:0 14px; border-bottom:1px solid var(--line); font-size:13.5px; font-weight:600;}
+  .cstest .th .dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+  .chatarea{flex:1; overflow:auto; padding:16px 14px; background:#fff;}
+  .chatfull{max-width:880px; margin:0 auto; padding:22px 20px 10px;}
+  .cmsg{margin-bottom:16px;}
+  .cmsg.u{display:flex; justify-content:flex-end;}
+  .cmsg.u .bb{background:#f0f0f0; border-radius:10px 10px 2px 10px; padding:9px 13px; font-size:13.5px; max-width:78%;}
+  .cmsg.a .who{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--gray); margin-bottom:6px;}
+  .cmsg.a .who .av{width:20px;height:20px;border-radius:5px;background:linear-gradient(135deg,#2670e8,#8661c5,#e3008c);
+                   display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;}
+  .cmsg.a .bb{font-size:13.5px; color:var(--ink); line-height:1.75;}
+  .cmsg .think{border-left:2px solid var(--bluel); padding:2px 0 2px 11px; margin:0 0 11px; font-size:11.5px; color:var(--gray); line-height:1.8;}
+  .cite{display:inline-flex; align-items:center; justify-content:center; min-width:16px; height:16px; padding:0 4px;
+        background:var(--bluebg); color:var(--blue2); border-radius:3px; font-size:10.5px; font-weight:600; vertical-align:2px; margin:0 1px;}
+  .reftbl{border:1px solid var(--line); border-radius:6px; overflow:hidden; overflow-x:auto; margin:11px 0 0;}
+  .reftbl table{font-size:12px;}
+  .reftbl th{background:#faf9f8; text-align:left; padding:6px 10px; font-weight:600; color:var(--ink2); border-bottom:1px solid var(--line); white-space:nowrap;}
+  .reftbl td{padding:6px 10px; border-bottom:1px solid var(--line2);}
+  .reftbl tr:last-child td{border-bottom:0;}
+  .reftbl td.n, .reftbl th.n{text-align:right; font-variant-numeric:tabular-nums;}
+  .srcs{margin-top:11px; border-top:1px solid var(--line2); padding-top:9px; font-size:11.5px; color:var(--gray);}
+  .srcs .s{display:flex; gap:7px; padding:2px 0;}
+  .warnbox{background:var(--amberbg); border:1px solid #f0d999; border-radius:6px; padding:9px 12px; font-size:11.5px; color:#6b5410; margin-top:11px; line-height:1.7;}
+  .sugg{display:flex; flex-wrap:wrap; gap:7px; padding:0 14px 12px;}
+  .sugg button{border:1px solid var(--line); border-radius:16px; padding:6px 13px; font-size:12px; color:var(--blue2); background:#fff; text-align:left;}
+  .sugg button:hover{background:var(--bluebg); border-color:var(--bluel);}
+  .sugg button.on{background:var(--bluebg); border-color:var(--blue); font-weight:600;}
+  .cin{border-top:1px solid var(--line); padding:10px 14px 8px;}
+  .cin .box{display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:20px; padding:7px 8px 7px 15px;}
+  .cin input{flex:1; border:0; outline:none; font:inherit; font-size:13px; color:var(--gray);}
+  .cin .send{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .cin .disc{font-size:10.5px; color:var(--gray2); text-align:center; padding:7px 0 2px;}
 
-  .kpi{background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; position:relative; overflow:hidden;}
-  .kpi::before{content:""; position:absolute; left:0; top:0; width:100%; height:4px; background:var(--navy);}
-  .kpi.b::before{background:var(--blue);} .kpi.o::before{background:var(--orange);} .kpi.g::before{background:var(--green);}
-  .kpi .lab{font-size:11.5px; color:var(--gray);}
-  .kpi .val{font-size:29px; font-weight:700; color:var(--navy); line-height:1.25; letter-spacing:-.01em;}
-  .kpi.o .val{color:var(--orange);} .kpi.g .val{color:var(--green);}
-  .kpi .val span{font-size:14px; font-weight:600; margin-left:2px;}
-  .kpi .delta{font-size:11.5px; color:var(--green);}
-  .kpi .delta.down{color:var(--red);}
+  /* ============ Power BI ============ */
+  .pbi{display:flex; min-height:calc(100vh - 86px); background:#f3f2f1;}
+  .pbirail{width:52px; background:#fff; border-right:1px solid var(--line); padding:8px 0; flex:none;
+           display:flex; flex-direction:column; align-items:center; gap:3px;}
+  .pbirail .r{width:40px;height:40px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+              font-size:15px; color:var(--gray); gap:1px;}
+  .pbirail .r span{font-size:8.5px;}
+  .pbirail .r:hover{background:var(--line2);}
+  .pbirail .r.on{background:var(--bluebg); color:var(--blue2);}
+  .pbibody{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .pbitop{height:44px; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 14px; gap:12px;}
+  .pbitop .nm{font-size:14px; font-weight:600;}
+  .pbitop .nm small{color:var(--gray); font-weight:400; font-size:12px;}
+  .pbicmd{height:40px; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 12px; gap:2px; font-size:12.5px; color:var(--ink2);}
+  .pbicmd button{padding:5px 10px; border-radius:4px; display:flex; align-items:center; gap:6px;}
+  .pbicmd button:hover{background:var(--line2);}
+  .pbicmd .cop{color:var(--purple); font-weight:600;}
+  .pbicmd .sp{width:1px; height:20px; background:var(--line); margin:0 6px;}
+  .pbicanvas{flex:1; display:flex; min-height:0;}
+  .pbipage{flex:1; padding:12px; display:grid; gap:10px;
+           grid-template-columns:repeat(4,1fr); grid-template-rows:88px 1fr 1fr; min-width:0;}
+  .vis{background:#fff; border:1px solid #e6e6e6; border-radius:3px; padding:9px 12px; display:flex; flex-direction:column; min-width:0;}
+  .vis .vt{font-size:12px; font-weight:600; color:#252423; display:flex; align-items:center; justify-content:space-between;}
+  .vis .vt em{font-style:normal; color:#c8c6c4; font-size:13px; letter-spacing:2px;}
+  .card1{align-items:flex-start; justify-content:center;}
+  .card1 .big{font-size:30px; font-weight:600; line-height:1.1; letter-spacing:-.02em;}
+  .card1 .cap{font-size:11px; color:var(--gray); margin-top:2px;}
+  .card1 .dt{font-size:11px; margin-top:3px;}
+  .up{color:var(--green);} .dn{color:var(--red);}
+  .vbody{flex:1; min-height:0; margin-top:7px;}
+  .pbitbl{font-size:11.5px;}
+  .pbitbl th{text-align:left; font-weight:600; color:#252423; border-bottom:1px solid #c8c6c4; padding:5px 7px; white-space:nowrap;}
+  .pbitbl td{padding:4px 7px; border-bottom:1px solid #f0f0f0;}
+  .pbitbl td.n, .pbitbl th.n{text-align:right; font-variant-numeric:tabular-nums;}
+  .databar{position:relative; display:block; height:13px;}
+  .databar i{position:absolute; left:0; top:1px; height:11px; background:#c7e0f4; border-radius:1px;}
+  .databar b{position:relative; font-weight:400; padding-left:4px;}
+  .slicer .opt{display:flex; align-items:center; gap:8px; font-size:11.5px; padding:3px 2px; color:var(--ink2);}
+  .slicer .cbx{width:13px;height:13px;border:1px solid #8a8886; border-radius:2px; flex:none; display:flex; align-items:center; justify-content:center; font-size:9px; color:#fff;}
+  .slicer .cbx.c{background:#252423; border-color:#252423;}
+  .pbifilter{width:214px; flex:none; background:#fff; border-left:1px solid var(--line); padding:11px 12px; font-size:12px;}
+  .pbifilter h4{font-size:12.5px; font-weight:600; margin-bottom:9px;}
+  .pbifilter .fg{font-size:10.5px; color:var(--gray); text-transform:uppercase; letter-spacing:.05em; margin:12px 0 5px;}
+  .pbifilter .fi{border:1px solid var(--line); border-radius:3px; padding:7px 9px; margin-bottom:6px;}
+  .pbifilter .fi b{font-size:11.5px; display:block;}
+  .pbifilter .fi span{font-size:11px; color:var(--gray);}
+  .pbitabs{height:32px; background:#fff; border-top:1px solid var(--line); display:flex; align-items:stretch; padding:0 10px; font-size:11.5px;}
+  .pbitabs button{padding:0 14px; color:var(--gray); border-bottom:2px solid transparent;}
+  .pbitabs button.on{color:var(--ink); font-weight:600; border-bottom-color:#252423;}
 
-  /* ===== charts ===== */
-  .bars{display:flex; align-items:flex-end; gap:10px; height:158px; padding-top:6px;}
-  .bars .b{flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:5px; height:100%;}
-  .bars .bar{width:100%; background:linear-gradient(180deg,var(--blue2),var(--blue)); border-radius:4px 4px 0 0; min-height:3px;}
-  .bars .b.hl .bar{background:linear-gradient(180deg,#f6a469,var(--orange));}
-  .bars .n{font-size:10.5px; color:var(--gray);}
-  .bars .v{font-size:10.5px; color:var(--navy); font-weight:700;}
+  /* ============ SharePoint ============ */
+  .sp{min-height:calc(100vh - 86px); background:#fff;}
+  .sphead{border-bottom:1px solid var(--line); padding:11px 26px 0;}
+  .sphead .site{display:flex; align-items:center; gap:11px;}
+  .sphead .logo{width:38px;height:38px;border-radius:4px;background:#036c70;color:#fff;display:flex;
+                align-items:center;justify-content:center;font-size:15px;font-weight:600;}
+  .sphead .site b{font-size:15px;}
+  .sphead .site small{display:block; font-size:11.5px; color:var(--gray); font-weight:400;}
+  .sphead .star{margin-left:auto; font-size:12px; color:var(--gray); display:flex; gap:14px;}
+  .spnav{display:flex; gap:2px; margin-top:9px; font-size:13px;}
+  .spnav button{padding:8px 12px; color:var(--ink2); border-bottom:2px solid transparent;}
+  .spnav button.on{font-weight:600; border-bottom-color:#036c70;}
+  .spmain{padding:14px 26px 60px;}
+  .splisthead{display:flex; align-items:flex-end; gap:12px; margin-bottom:10px;}
+  .splisthead h1{font-size:20px; font-weight:600;}
+  .splisthead p{font-size:12px; color:var(--gray); margin-top:2px;}
+  .spcmd{display:flex; align-items:center; gap:2px; font-size:13px; color:var(--ink2); border-bottom:1px solid var(--line2); padding-bottom:8px; margin-bottom:2px;}
+  .spcmd button{padding:6px 10px; border-radius:4px; display:flex; align-items:center; gap:7px;}
+  .spcmd button:hover{background:var(--line2);}
+  .spcmd .new{color:var(--blue2); font-weight:600;}
+  .spcmd .right{margin-left:auto; display:flex; align-items:center; gap:8px;}
+  .spcmd .viewsel{display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:4px; font-weight:600;}
+  .spcmd .viewsel:hover{background:var(--line2);}
+  .sptbl{font-size:13px;}
+  .sptbl th{text-align:left; font-weight:600; color:var(--gray); font-size:12px; padding:8px 10px;
+            border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer;}
+  .sptbl th:hover{background:#faf9f8;}
+  .sptbl th .ch{color:#a19f9d; font-size:9px; margin-left:4px;}
+  .sptbl td{padding:9px 10px; border-bottom:1px solid var(--line2); white-space:nowrap;}
+  .sptbl tbody tr{cursor:pointer;}
+  .sptbl tbody tr:hover td{background:#f3f2f1;}
+  .sptbl tbody tr.sel td{background:var(--bluebg);}
+  .sptbl td .lk{color:var(--blue2);}
+  .sptbl .pcell{display:flex; align-items:center; gap:7px;}
+  .prs{width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex:none;}
+  .spwrap{display:flex; gap:0; align-items:flex-start;}
+  .sptblwrap{flex:1; min-width:0; overflow-x:auto;}
+  .sppane{width:296px; flex:none; border-left:1px solid var(--line); padding:0 0 0 16px; margin-left:16px;}
+  .sppane h3{font-size:15px; font-weight:600; margin-bottom:2px;}
+  .sppane .sb{font-size:11.5px; color:var(--gray); margin-bottom:13px;}
+  .sppane dl{font-size:12.5px;}
+  .sppane dt{color:var(--gray); font-size:11.5px; margin-top:11px;}
+  .sppane dd{color:var(--ink); margin-top:1px;}
+  .spnote{background:var(--bluebg); border:1px solid var(--bluel); border-radius:4px; padding:10px 13px;
+          font-size:12px; color:#123c63; margin:12px 0 14px; line-height:1.7;}
 
-  .hbar{display:grid; grid-template-columns:132px 1fr 62px; align-items:center; gap:10px; margin-bottom:9px; font-size:12.5px;}
-  .hbar .track{background:var(--pale); border-radius:5px; height:15px; overflow:hidden;}
-  .hbar .fill{height:100%; background:var(--blue); border-radius:5px;}
-  .hbar .fill.o{background:var(--orange);} .hbar .fill.g{background:var(--green);} .hbar .fill.n{background:var(--navy);}
-  .hbar .num{text-align:right; color:var(--navy); font-weight:700;}
-
-  /* ===== tables ===== */
-  table{width:100%; border-collapse:collapse; font-size:12.5px;}
-  thead th{background:var(--navy); color:#fff; font-weight:700; text-align:left; padding:8px 11px; font-size:12px; white-space:nowrap;}
-  tbody td{border-bottom:1px solid var(--border); padding:8px 11px; vertical-align:middle;}
-  tbody tr:nth-child(even) td{background:var(--pale);}
-  tbody tr:hover td{background:var(--lblue);}
-  td.num, th.num{text-align:right; font-variant-numeric:tabular-nums;}
-  td.ctr, th.ctr{text-align:center;}
-
-  .pill{display:inline-block; font-size:11px; padding:2px 9px; border-radius:11px; font-weight:700; white-space:nowrap;}
-  .pill.ok{background:var(--greenbg); color:var(--green);}
-  .pill.mid{background:var(--yellowbg); color:#8a6410;}
-  .pill.off{background:#eef1f6; color:var(--gray);}
-  .pill.on{background:var(--lblue); color:var(--navy);}
-  .pill.hot{background:var(--orangebg); color:var(--orange);}
-
-  .mini{display:inline-block; width:74px; height:7px; background:var(--pale); border-radius:4px; overflow:hidden; vertical-align:middle; margin-right:7px;}
+  /* ============ 展開・定着（デジライズ側の管理） ============ */
+  .dg{padding:22px 30px 60px; background:var(--bg); min-height:calc(100vh - 86px);}
+  .dg h1{font-size:20px; font-weight:600;}
+  .dg .lead{color:var(--gray); font-size:13px; margin:3px 0 18px;}
+  .dgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px;}
+  .dk{background:#fff; border:1px solid var(--line); border-radius:8px; padding:13px 15px;}
+  .dk .l{font-size:11.5px; color:var(--gray);}
+  .dk .v{font-size:26px; font-weight:600; line-height:1.2;}
+  .dk .v span{font-size:13px; font-weight:400; color:var(--gray);}
+  .dk .d{font-size:11px; color:var(--green);}
+  .d2{display:grid; grid-template-columns:1.3fr 1fr; gap:14px;}
+  @media(max-width:1120px){.dgrid{grid-template-columns:repeat(2,1fr);} .d2{grid-template-columns:1fr;}}
+  .dbox{background:#fff; border:1px solid var(--line); border-radius:8px; padding:15px 17px;}
+  .dbox h3{font-size:13.5px; font-weight:600;}
+  .dbox .hint{font-size:11.5px; color:var(--gray); margin:2px 0 11px;}
+  .dtbl{font-size:12.5px;}
+  .dtbl th{text-align:left; font-weight:600; font-size:11.5px; color:var(--gray); padding:6px 8px; border-bottom:1px solid var(--line);}
+  .dtbl td{padding:7px 8px; border-bottom:1px solid var(--line2);}
+  .dtbl td.n, .dtbl th.n{text-align:right; font-variant-numeric:tabular-nums;}
+  .dtbl td.c, .dtbl th.c{text-align:center;}
+  .mini{display:inline-block; width:66px; height:6px; background:var(--line2); border-radius:3px; overflow:hidden; vertical-align:middle; margin-right:7px;}
   .mini i{display:block; height:100%; background:var(--blue);}
-
-  /* ===== chat ===== */
-  .chatwrap{display:grid; grid-template-columns:1fr 318px; gap:16px; align-items:start;}
-  @media(max-width:1180px){.chatwrap{grid-template-columns:1fr;}}
-  .chatcard{background:#fff; border:1px solid var(--border); border-radius:10px; display:flex; flex-direction:column; min-height:565px;}
-  .chatlog{padding:18px; flex:1; display:flex; flex-direction:column; gap:17px; max-height:66vh; overflow-y:auto;}
-  .msg{display:flex; gap:11px;}
-  .msg .ava{width:30px;height:30px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
-  .msg.user .ava{background:#dbe6f7; color:var(--navy);}
-  .msg.ai .ava{background:var(--navy); color:#fff;}
-  .bubble{flex:1; min-width:0;}
-  .msg.user .bubble{background:var(--pale); border:1px solid var(--border); border-radius:0 9px 9px 9px; padding:9px 13px; font-size:13.5px;}
-  .msg.ai .bubble{font-size:13.5px;}
-  .steps{background:var(--pale); border:1px solid var(--border); border-radius:8px; padding:9px 12px; margin-bottom:11px; font-size:11.5px; color:var(--gray);}
-  .steps .s{display:flex; gap:8px; padding:2px 0;}
-  .steps .s b{color:var(--navy); font-weight:700;}
-  .steps .s .tick{color:var(--green); font-weight:700;}
-  .ansbox{border:1px solid var(--border); border-left:3px solid var(--blue); border-radius:0 8px 8px 0; padding:11px 14px; background:#fff;}
-  .ansbox p + .tblwrap{margin-top:10px;}
-  .tblwrap{border:1px solid var(--border); border-radius:7px; overflow:hidden; overflow-x:auto;}
-  .tblwrap table{font-size:12px;}
-  .tblwrap thead th{background:#eaf0f9; color:var(--navy); border-bottom:1px solid var(--border);}
-  .tblwrap tbody td{padding:6px 10px;}
-  .src{margin-top:9px; font-size:11px; color:var(--gray);}
-  .src b{color:var(--navy);}
-  details.sql{margin-top:9px;}
-  details.sql summary{font-size:11.5px; color:var(--blue); cursor:pointer;}
-  details.sql pre{margin-top:7px; background:#0e1b34; color:#cfe0ff; padding:11px 13px; border-radius:7px; font-size:11.5px; line-height:1.6; overflow-x:auto; font-family:"SFMono-Regular",Consolas,Menlo,monospace;}
-  .chatinput{border-top:1px solid var(--border); padding:12px 16px; display:flex; gap:9px; align-items:center;}
-  .chatinput input{flex:1; font:inherit; font-size:13px; padding:9px 12px; border:1px solid var(--border); border-radius:7px; background:var(--pale); color:var(--gray);}
-  .chatinput button{background:var(--navy); color:#fff; border:0; border-radius:7px; padding:9px 18px; font-size:13px; font-weight:700;}
-  .qlist{display:flex; flex-direction:column; gap:8px;}
-  .q{text-align:left; background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:12.5px; color:#33405a; line-height:1.5;}
-  .q:hover{border-color:var(--blue); background:var(--lblue); color:var(--navy);}
-  .q.on{border-color:var(--navy); background:var(--lblue); color:var(--navy); font-weight:700;}
-  .q .tag{display:block; font-size:10.5px; color:var(--orange); font-weight:700; margin-bottom:2px;}
-
-  /* ===== agent admin ===== */
-  .agrid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
-  @media(max-width:1180px){.agrid{grid-template-columns:1fr;}}
-  .agent{background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; cursor:pointer;}
-  .agent:hover{border-color:var(--blue);}
-  .agent.on{border-color:var(--navy); box-shadow:0 0 0 2px rgba(22,51,126,.10);}
-  .agent .row1{display:flex; align-items:center; gap:9px;}
-  .agent .ic{width:30px;height:30px;border-radius:7px;background:var(--lblue);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;}
-  .agent h4{font-size:13.5px; color:var(--navy); flex:1;}
-  .agent .meta{font-size:11.5px; color:var(--gray); margin-top:7px; line-height:1.6;}
-  .agent .meta b{color:#33405a;}
-  .toggle{width:38px; height:21px; border-radius:11px; background:var(--green); position:relative; border:0; flex:none;}
-  .toggle::after{content:""; position:absolute; top:2px; right:2px; width:17px; height:17px; border-radius:50%; background:#fff;}
-  .toggle.off{background:#c3ccda;}
-  .toggle.off::after{left:2px; right:auto;}
-
-  .kv{display:grid; grid-template-columns:118px 1fr; gap:7px 12px; font-size:12.5px;}
-  .kv dt{color:var(--gray);}
-  .kv dd{color:var(--ink);}
-  .prompt{background:#0e1b34; color:#cfe0ff; border-radius:8px; padding:12px 14px; font-size:11.5px; line-height:1.75; white-space:pre-wrap; font-family:"SFMono-Regular",Consolas,Menlo,monospace; margin-top:9px;}
-
-  .filters{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
-  .filters button{background:#fff; border:1px solid var(--border); border-radius:16px; padding:5px 14px; font-size:12px; color:#33405a;}
-  .filters button.on{background:var(--navy); border-color:var(--navy); color:#fff; font-weight:700;}
-
-  .legend{font-size:11px; color:var(--gray); margin-top:10px;}
-  .foot{margin-top:26px; font-size:11px; color:var(--gray); line-height:1.7;}
-  .stamp{position:fixed; right:14px; bottom:12px; font-size:10.5px; color:#93a0b2; background:rgba(255,255,255,.86); border:1px solid var(--border); border-radius:12px; padding:3px 11px; z-index:50;}
+  .hb{display:grid; grid-template-columns:120px 1fr 46px; align-items:center; gap:9px; margin-bottom:7px; font-size:12px;}
+  .hb .t{background:var(--line2); border-radius:3px; height:13px; overflow:hidden;}
+  .hb .f{height:100%; background:var(--blue);}
+  .hb .n{text-align:right; font-weight:600;}
+  .stamp{position:fixed; right:12px; bottom:10px; font-size:10.5px; color:#8a8886; background:rgba(255,255,255,.9);
+         border:1px solid var(--line); border-radius:11px; padding:2px 10px; z-index:90;}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="mark">AI</div>
-  <div class="brand">統合データベース AI活用コンソール<small>Integrated Data × AI Console</small></div>
-  <div class="env">開発環境</div>
-  <div class="userbox">
-    <label for="role">ログイン中</label>
-    <select id="role">
-      <option value="hq">本社 マーケティング部（管理者）</option>
-      <option value="master">中央営業所 AIマスター</option>
-      <option value="sales">中央営業所 営業担当</option>
-    </select>
-    <div class="avatar" id="avatar">本</div>
-  </div>
+<!-- ========== デモ切替（実製品にはない、デモ用の枠） ========== -->
+<div class="demobar">
+  <span class="lb">デモ切替</span>
+  <button class="on" data-s="arch">全体構成</button>
+  <button data-s="chat">Copilot Studio（会話）</button>
+  <button data-s="build">Copilot Studio（作成）</button>
+  <button data-s="pbi">Power BI（レポート）</button>
+  <button data-s="spo">SharePoint リスト</button>
+  <button data-s="dg">展開・定着管理</button>
+  <span class="note">画面はすべてUIシミュレーション／データは架空</span>
 </div>
 
-<div class="shell">
-  <nav class="side">
-    <h4>使う</h4>
-    <button class="nav on" data-page="dash"><span class="ic">▦</span>ダッシュボード</button>
-    <button class="nav" data-page="ask"><span class="ic">💬</span>AIデータ照会</button>
-    <h4 id="adminhead">管理する</h4>
-    <button class="nav" data-page="agents" data-admin="1"><span class="ic">🤖</span>エージェント管理</button>
-    <button class="nav" data-page="offices" data-admin="1"><span class="ic">🏢</span>営業所・AIマスター</button>
-    <button class="nav" data-page="usage" data-admin="1"><span class="ic">📈</span>利用状況・効果</button>
-    <button class="nav" data-page="data" data-admin="1"><span class="ic">🗄</span>データソース連携</button>
-    <div class="note" id="scopenote">
-      <b>参照できる範囲</b><br>全営業所・全項目<br>（本社マーケティング部の権限）
-    </div>
-  </nav>
+<!-- ================= 全体構成 ================= -->
+<section class="screen" id="s-arch">
+  <div class="suite">
+    <div class="waffle">▦</div><div class="app">ソリューション全体構成</div>
+    <div class="search">🔍 検索</div>
+    <div class="right"><div class="ib">⚙</div><div class="ib">？</div><div class="me">MK</div></div>
+  </div>
+  <div class="arch">
+    <h1>統合データベース × Microsoft 365 の全体構成</h1>
+    <p class="lead">データの置き場は統合データベース（BigQuery）のまま。参照する側だけを Microsoft 365 に寄せる構成です。</p>
 
-  <main class="main">
-
-  <!-- ============ ダッシュボード ============ -->
-  <section class="page" id="page-dash">
-    <div class="pagehead">
-      <h1>ダッシュボード</h1>
-      <p>統合データベースに対するAI活用の全体状況　／　2028年3月度</p>
-    </div>
-    <div class="banner">
-      <span>ℹ</span><div>統合データベース（BigQuery）と接続済みです。最終同期：<b>2028/03/14 06:00</b>　対象テーブル 18／18 正常</div>
-    </div>
-
-    <div class="grid4" style="margin-bottom:16px;">
-      <div class="kpi"><div class="lab">稼働中のAIマスター</div><div class="val">38<span>名</span></div><div class="delta">目標40名に対し 95%</div></div>
-      <div class="kpi b"><div class="lab">今月の質問数</div><div class="val">4,812<span>件</span></div><div class="delta">前月比 +18.4%</div></div>
-      <div class="kpi o"><div class="lab">削減時間（試算）</div><div class="val">1,240<span>時間</span></div><div class="delta">前月比 +212時間</div></div>
-      <div class="kpi g"><div class="lab">展開済み営業所</div><div class="val">16<span>／16</span></div><div class="delta">2028年2月に全所展開が完了</div></div>
-    </div>
-
-    <div class="grid32" style="margin-bottom:16px;">
-      <div class="card">
-        <h3>質問数の推移</h3><div class="sub">AIマスター育成の完了（2027年9月）以降、営業所展開に伴って増加</div>
-        <div class="bars">
-          <div class="b"><span class="v">312</span><div class="bar" style="height:9%"></div><span class="n">27/10</span></div>
-          <div class="b"><span class="v">764</span><div class="bar" style="height:20%"></div><span class="n">11月</span></div>
-          <div class="b"><span class="v">1,205</span><div class="bar" style="height:31%"></div><span class="n">12月</span></div>
-          <div class="b"><span class="v">2,140</span><div class="bar" style="height:47%"></div><span class="n">28/1</span></div>
-          <div class="b"><span class="v">4,064</span><div class="bar" style="height:78%"></div><span class="n">2月</span></div>
-          <div class="b hl"><span class="v">4,812</span><div class="bar" style="height:96%"></div><span class="n">3月</span></div>
-        </div>
-        <div class="legend">※ 質問数＝AIデータ照会での問い合わせ件数（サンプルデータ）</div>
+    <div class="flowrow">
+      <div class="fbox gcp">
+        <div class="cap">DATA PLATFORM</div>
+        <h3>統合データベース（Google BigQuery）</h3>
+        <ul>
+          <li>顧客マスタ・契約・使用量・保安点検・解約履歴</li>
+          <li>各基幹システムからの連携は既存フローのまま</li>
+          <li>2027年3月に構築完了予定（予算確保済み）</li>
+        </ul>
       </div>
-      <div class="card">
-        <h3>エージェント別の利用比率</h3><div class="sub">今月の質問 4,812件の内訳</div>
-        <div class="hbar"><span>顧客データ照会</span><div class="track"><div class="fill n" style="width:46%"></div></div><span class="num">46%</span></div>
-        <div class="hbar"><span>優先アプローチ抽出</span><div class="track"><div class="fill" style="width:27%"></div></div><span class="num">27%</span></div>
-        <div class="hbar"><span>提案トーク生成</span><div class="track"><div class="fill g" style="width:17%"></div></div><span class="num">17%</span></div>
-        <div class="hbar"><span>報告・資料作成</span><div class="track"><div class="fill o" style="width:10%"></div></div><span class="num">10%</span></div>
-        <div class="legend">※ 「顧客データ照会」が半数近くを占め、Excel加工の置き換えが進んでいる状態</div>
+      <div class="arw">→</div>
+      <div class="fbox ms">
+        <div class="cap">ACCESS LAYER</div>
+        <h3>参照のしかたを3つ用意する</h3>
+        <ul>
+          <li>見る　＝ Power BI（定型のレポート）</li>
+          <li>聞く　＝ Copilot Studio エージェント</li>
+          <li>書く　＝ SharePoint リスト（活動記録）</li>
+        </ul>
       </div>
-    </div>
-
-    <div class="grid2">
-      <div class="card">
-        <h3>直近のアクティビティ</h3><div class="sub">エージェントの更新・展開の履歴</div>
-        <table>
-          <thead><tr><th>日時</th><th>内容</th><th>実施者</th></tr></thead>
-          <tbody>
-            <tr><td>03/14 09:12</td><td>「優先アプローチ抽出」の条件を更新（契約年数の閾値）</td><td>本社マーケ</td></tr>
-            <tr><td>03/12 16:40</td><td>南営業所 AIマスター 2名を追加登録</td><td>本社マーケ</td></tr>
-            <tr><td>03/09 11:05</td><td>「提案トーク生成」に新料金プランの説明パターンを追加</td><td>本社マーケ</td></tr>
-            <tr><td>03/05 14:22</td><td>回答できなかった質問 12件をレビューし、用語辞書に反映</td><td>本社マーケ</td></tr>
-            <tr><td>03/01 08:00</td><td>統合データベースの月次同期（18テーブル）完了</td><td>システム</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="card">
-        <h3>要対応</h3><div class="sub">推進側で手を打つべき項目</div>
-        <table>
-          <thead><tr><th>項目</th><th class="ctr">件数</th><th>状態</th></tr></thead>
-          <tbody>
-            <tr><td>回答できなかった質問（改善候補）</td><td class="num">12</td><td><span class="pill hot">要レビュー</span></td></tr>
-            <tr><td>今月まだ利用のないAIマスター</td><td class="num">2</td><td><span class="pill mid">フォロー要</span></td></tr>
-            <tr><td>利用率が50%を下回る営業所</td><td class="num">1</td><td><span class="pill mid">フォロー要</span></td></tr>
-            <tr><td>同期エラーのあるテーブル</td><td class="num">0</td><td><span class="pill ok">正常</span></td></tr>
-            <tr><td>権限設定の未レビュー項目</td><td class="num">0</td><td><span class="pill ok">正常</span></td></tr>
-          </tbody>
-        </table>
-        <div class="legend">※ 「回答できなかった質問」を毎月潰していくことが、定着の実務になります</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ AIデータ照会 ============ -->
-  <section class="page" id="page-ask" hidden>
-    <div class="pagehead">
-      <h1>AIデータ照会</h1>
-      <p>統合データベースに日本語で質問すると、集計した結果が返ります　／　Excelでの抽出・加工を挟みません</p>
-    </div>
-    <div class="banner" id="askbanner">
-      <span>ℹ</span><div>参照範囲：<b>全営業所・全項目</b>　権限はAIへの指示ではなく、<b>検索時のフィルタ</b>として適用されます</div>
-    </div>
-
-    <div class="chatwrap">
-      <div class="chatcard">
-        <div class="chatlog" id="chatlog"></div>
-        <div class="chatinput">
-          <input id="qinput" placeholder="質問を入力…（このデモでは右の質問例からお選びください）" readonly>
-          <button id="qsend">送信</button>
+      <div class="arw">→</div>
+      <div class="fbox people">
+        <div class="cap">USERS</div>
+        <h3>使う人</h3>
+        <div class="apps" style="margin-top:8px;">
+          <div class="appcard"><div class="ttl"><div class="ic" style="background:#0f6cbd">本</div>本社</div><p>マーケティング部・営業企画</p></div>
+          <div class="appcard"><div class="ttl"><div class="ic" style="background:#8661c5">A</div>AIマスター</div><p>16営業所×1〜2名＋本社</p></div>
+          <div class="appcard"><div class="ttl"><div class="ic" style="background:#107c10">営</div>営業担当</div><p>約500名</p></div>
         </div>
       </div>
-      <div class="stack">
-        <div class="card">
-          <h3>質問例</h3><div class="sub">クリックすると回答が表示されます</div>
-          <div class="qlist" id="qlist"></div>
+    </div>
+
+    <div class="apps" style="margin-bottom:18px;">
+      <div class="appcard">
+        <div class="ttl"><div class="ic" style="background:#f2c811;color:#333">▮</div>Power BI</div>
+        <p><b>定型の「見る」を担当。</b>BigQuery のネイティブコネクタで接続。Import と DirectQuery の両方に対応し、Entra ID のシングルサインオンも使えます。毎月見る数字はここに集約します。</p>
+      </div>
+      <div class="appcard">
+        <div class="ttl"><div class="ic" style="background:linear-gradient(135deg,#2670e8,#8661c5)">✦</div>Copilot Studio</div>
+        <p><b>非定型の「聞く」を担当。</b>レポートに無い切り口を日本語で質問して取り出します。BigQuery へはカスタムコネクタ経由で接続します（下の注記）。</p>
+      </div>
+      <div class="appcard">
+        <div class="ttl"><div class="ic" style="background:#036c70">▤</div>SharePoint リスト</div>
+        <p><b>現場が「書く」を担当。</b>訪問記録・案件メモなど、基幹に無い情報の入力先。見送った CRM の代わりに、入力項目を絞った軽量な受け皿として置きます。</p>
+      </div>
+    </div>
+
+    <h4>この構成での確認事項（設計上、先に潰しておく点）</h4>
+    <div class="caveat">
+      <b>① Copilot Studio から BigQuery への接続方式</b><br>
+      Power Platform には Microsoft 純正の BigQuery コネクタがありません。公開されているのは独立発行元（Independent Publisher）のプレビュー版で、用意されているアクションはデータセット情報の取得のみです。
+      実装は <b>カスタムコネクタ（BigQuery REST API）</b>、または <b>Power Automate の HTTP アクション経由</b>のいずれかになります。どちらもプレミアムライセンスが前提です。
+      ＜出典：Microsoft Learn / Connectors 　※接続方式は要件定義フェーズで実機検証します＞
+    </div>
+    <div class="caveat">
+      <b>② SharePoint リストの容量</b><br>
+      1つのリストに保存できるのは 3,000万件までですが、<b>1つのビューで扱える件数は 5,000件のしきい値があり、SharePoint Online では変更できません</b>。
+      そのため顧客マスタそのものをリストに置くことはできません。<b>マスタは BigQuery、SharePoint リストは営業の活動記録</b>、という切り分けにしています。
+      ＜出典：Microsoft サポート「大きいリストとライブラリのリスト ビューのしきい値」＞
+    </div>
+    <div class="caveat">
+      <b>③ Microsoft 365 Copilot（有料版）との関係</b><br>
+      有料版 Copilot が扱うのは Microsoft Graph 上のデータ（メール・会議・ファイル等）です。<b>BigQuery は Graph の対象外</b>のため、有料版を購入しても今回のデータ照会は実現しません。今回作るのは Copilot Studio 上の専用エージェントです。
+    </div>
+  </div>
+</section>
+
+<!-- ================= Copilot Studio（会話） ================= -->
+<section class="screen" id="s-chat" hidden>
+  <div class="suite">
+    <div class="waffle">▦</div><div class="app">Copilot Studio</div>
+    <div class="search">🔍 エージェントを検索</div>
+    <div class="right"><div class="ib">⚙</div><div class="ib">？</div><div class="me">MK</div></div>
+  </div>
+  <div style="display:flex; min-height:calc(100vh - 86px); background:#fff;">
+    <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+      <div style="border-bottom:1px solid var(--line); padding:11px 22px; display:flex; align-items:center; gap:11px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#2670e8,#8661c5,#e3008c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">✦</div>
+        <div><b style="font-size:14.5px;">営業データアシスタント</b>
+          <small style="display:block;font-size:11.5px;color:var(--gray);">公開済み　･　生成オーケストレーション オン</small></div>
+        <div style="margin-left:auto; display:flex; gap:8px; font-size:12px; color:var(--gray);">
+          <span>⟳ 新しいチャット</span></div>
+      </div>
+      <div class="chatarea"><div class="chatfull" id="chatfull"></div></div>
+      <div class="sugg" id="sugg" style="max-width:920px;margin:0 auto;width:100%;"></div>
+      <div class="cin" style="max-width:920px;margin:0 auto;width:100%;">
+        <div class="box"><span style="color:var(--gray)">📎</span>
+          <input placeholder="メッセージを入力してください（このデモでは上の候補からお選びください）" readonly>
+          <div class="send">➤</div></div>
+        <div class="disc">AI で生成されたコンテンツは誤りを含む場合があります。内容を確認してご利用ください。</div>
+      </div>
+    </div>
+    <div style="width:268px;flex:none;border-left:1px solid var(--line);padding:16px 16px 40px;background:#faf9f8;">
+      <div style="font-size:12px;font-weight:600;margin-bottom:9px;">この会話で使われたもの</div>
+      <div id="usedbox" style="font-size:11.5px;color:var(--ink2);line-height:1.8;"></div>
+      <div style="font-size:12px;font-weight:600;margin:20px 0 8px;">ログインユーザー</div>
+      <select id="role" style="width:100%;font:inherit;font-size:12.5px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:#fff;">
+        <option value="hq">本社 マーケティング部（管理者）</option>
+        <option value="master">中央営業所 AIマスター</option>
+        <option value="sales">中央営業所 営業担当</option>
+      </select>
+      <div id="scopebox" style="font-size:11.5px;color:var(--gray);margin-top:9px;line-height:1.7;"></div>
+      <div style="font-size:11px;color:var(--gray);margin-top:18px;line-height:1.7;border-top:1px solid var(--line);padding-top:12px;">
+        ユーザーを切り替えると、<b>同じ質問でも返る行と列が変わります</b>。権限はプロンプトではなく、クエリ側の条件として効かせます。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Copilot Studio（作成） ================= -->
+<section class="screen" id="s-build" hidden>
+  <div class="suite">
+    <div class="waffle">▦</div><div class="app">Copilot Studio</div>
+    <div class="search">🔍 エージェントを検索</div>
+    <div class="right"><div class="ib">⚙</div><div class="ib">？</div><div class="me">MK</div></div>
+  </div>
+  <div class="cs">
+    <div class="csrail">
+      <div class="agent"><div class="av">✦</div>
+        <div><b>営業データアシスタント</b><small>公開済み</small></div></div>
+      <button class="on"><span class="i">▤</span>概要</button>
+      <button><span class="i">📚</span>ナレッジ</button>
+      <button><span class="i">🔧</span>ツール</button>
+      <button><span class="i">💬</span>トピック</button>
+      <button><span class="i">📊</span>分析</button>
+      <button><span class="i">📡</span>チャネル</button>
+      <button><span class="i">⚙</span>設定</button>
+    </div>
+    <div class="csmain">
+      <div class="cswork">
+        <h1>概要</h1>
+        <p class="sub">エージェントの動き方・参照先・使える操作を、この1画面で管理します</p>
+
+        <div class="csbox">
+          <h3>説明</h3>
+          <div class="hint">エージェントが何をするものかの説明（オーケストレーションの判断にも使われます）</div>
+          <div class="instr">統合データベースに蓄積された顧客・契約・使用量・保安点検のデータを参照し、営業担当からの日本語の質問に対して、集計結果と根拠を返します。</div>
         </div>
-        <div class="card">
-          <h3>この画面のポイント</h3>
-          <div style="font-size:12px; color:var(--gray); line-height:1.75;">
-            ■ 現場が触るのは「質問を書く」ところだけ<br>
-            ■ 回答には必ず<b>参照したテーブル</b>を表示<br>
-            ■ AIが生成したSQLを開いて確認できる<br>
-            ■ 権限外のデータは検索段階で除外される
+
+        <div class="csbox">
+          <h3>手順（指示）</h3>
+          <div class="hint">エージェントの振る舞いを決める指示文。営業所への展開時はここをコピーして所ごとに調整します</div>
+          <div class="instr">・回答は必ず統合データベースの集計結果のみに基づくこと。推測で数値を補わない。
+・該当データが無い場合は「該当なし」と答え、件数をゼロと言い換えない。
+・件数を答えるときは、集計に使った条件（期間・対象・除外）を必ず併記する。
+・ログインユーザーの営業所コードの範囲外のデータは参照しない。
+・金額に関する項目は、参照権限のあるユーザーにのみ提示する。
+・個人の氏名・連絡先は出力せず、顧客IDで示す。
+・回答の末尾に、参照したテーブル名を必ず列挙する。</div>
+        </div>
+
+        <div class="csbox">
+          <h3>ナレッジ</h3>
+          <div class="hint">エージェントが参照するデータ・ドキュメント</div>
+          <div class="msrow"><div class="ic">🗄</div><div class="nm">統合データベース（BigQuery）</div>
+            <div class="de">customer_master / contract / usage_monthly / inspection / churn_log / campaign</div>
+            <span class="tagx pr">カスタムコネクタ</span></div>
+          <div class="msrow"><div class="ic">▤</div><div class="nm">顧客・活動管理リスト</div>
+            <div class="de">SharePoint リスト（訪問記録・案件メモ）</div><span class="tagx ok">標準コネクタ</span></div>
+          <div class="msrow"><div class="ic">📄</div><div class="nm">新料金プラン 説明資料</div>
+            <div class="de">SharePoint ドキュメントライブラリ（PDF 8件）</div><span class="tagx ok">標準コネクタ</span></div>
+          <div class="msrow"><div class="ic">📘</div><div class="nm">用語辞書</div>
+            <div class="de">「切替済み」「有効契約」などの社内定義　※回答できなかった質問から毎月追記</div>
+            <span class="tagx ok">標準コネクタ</span></div>
+        </div>
+
+        <div class="csbox">
+          <h3>ツール（アクション）</h3>
+          <div class="hint">エージェントが呼び出せる操作。生成オーケストレーションが質問に応じて自動で選びます</div>
+          <div class="msrow"><div class="ic">🔍</div><div class="nm">顧客データを照会する</div>
+            <div class="de">条件を受け取り BigQuery を集計して返す</div><span class="tagx pr">プレミアム</span></div>
+          <div class="msrow"><div class="ic">🎯</div><div class="nm">優先訪問先を抽出する</div>
+            <div class="de">契約更新・使用量減・点検予定からスコア化して並べる</div><span class="tagx pr">プレミアム</span></div>
+          <div class="msrow"><div class="ic">💬</div><div class="nm">提案の骨子を作る</div>
+            <div class="de">契約内容と料金プランから話す順番のメモを生成</div><span class="tagx off">組み込み</span></div>
+          <div class="msrow"><div class="ic">✍</div><div class="nm">活動記録を登録する</div>
+            <div class="de">SharePoint リストに訪問記録を追加</div><span class="tagx ok">標準</span></div>
+          <div class="msrow"><div class="ic">📄</div><div class="nm">報告書のドラフトを作る</div>
+            <div class="de">月次・週次の定型フォーマットで生成</div><span class="tagx off">組み込み</span></div>
+        </div>
+
+        <div class="csbox">
+          <h3>チャネル</h3>
+          <div class="hint">現場がどこから使うか</div>
+          <div class="msrow"><div class="ic">👥</div><div class="nm">Microsoft Teams</div>
+            <div class="de">営業担当は Teams から利用（新しいアプリを覚えなくてよい）</div><span class="tagx ok">公開中</span></div>
+          <div class="msrow"><div class="ic">🌐</div><div class="nm">カスタム Web サイト</div>
+            <div class="de">社内ポータルへの埋め込み</div><span class="tagx off">未公開</span></div>
+        </div>
+      </div>
+
+      <div class="cstest">
+        <div class="th"><span class="dot"></span>エージェントのテスト</div>
+        <div class="chatarea" style="padding:14px 13px;">
+          <div class="cmsg u"><div class="bb" style="font-size:12.5px;">先月解約した世帯のうち、新料金プランの対象は何件？</div></div>
+          <div class="cmsg a">
+            <div class="who"><span class="av">✦</span>営業データアシスタント</div>
+            <div class="think">ツールを選択：顧客データを照会する<br>権限フィルタ：全営業所<br>BigQuery 実行：churn_log × contract × campaign</div>
+            <div class="bb" style="font-size:12.5px;">2028年2月に解約された世帯は <b>218件</b>、うち新料金プランの適用条件を満たすのは <b>96件</b>（44.0%）です<span class="cite">1</span>。</div>
+            <div class="srcs"><div class="s"><span class="cite">1</span><span>churn_log ／ contract ／ campaign（2028/03/14 06:00 同期）</span></div></div>
+          </div>
+        </div>
+        <div class="cin"><div class="box"><input placeholder="メッセージを入力" readonly><div class="send">➤</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Power BI ================= -->
+<section class="screen" id="s-pbi" hidden>
+  <div class="suite">
+    <div class="waffle">▦</div><div class="app">Power BI</div>
+    <div class="search">🔍 コンテンツを検索</div>
+    <div class="right"><div class="ib">🔔</div><div class="ib">⚙</div><div class="ib">？</div><div class="me">MK</div></div>
+  </div>
+  <div class="pbi">
+    <div class="pbirail">
+      <div class="r"><span style="font-size:16px">☰</span></div>
+      <div class="r"><span style="font-size:15px">🏠</span><span>ホーム</span></div>
+      <div class="r"><span style="font-size:15px">➕</span><span>作成</span></div>
+      <div class="r on"><span style="font-size:15px">▮</span><span>参照</span></div>
+      <div class="r"><span style="font-size:15px">🗄</span><span>OneLake</span></div>
+      <div class="r"><span style="font-size:15px">📊</span><span>メトリック</span></div>
+      <div class="r"><span style="font-size:15px">⋯</span><span>詳細</span></div>
+    </div>
+    <div class="pbibody">
+      <div class="pbitop">
+        <span style="color:var(--pbiy);font-size:16px;">▮</span>
+        <div class="nm">営業実績ダッシュボード <small>― 統合データベース連携</small></div>
+        <div style="margin-left:auto;font-size:12px;color:var(--gray);">最終更新：2028/03/14 06:12（DirectQuery）</div>
+      </div>
+      <div class="pbicmd">
+        <button>📁 ファイル</button><button>📤 エクスポート</button><button>💬 チャットインチーム</button>
+        <div class="sp"></div>
+        <button class="cop">✦ Copilot</button>
+        <div class="sp"></div>
+        <button>🔖 ブックマーク</button><button>🔄 更新</button><button>📌 ピン留め</button>
+        <div style="margin-left:auto;display:flex;gap:2px;"><button>🔍 このビジュアルで質問</button><button>⤢ 全画面</button></div>
+      </div>
+      <div class="pbicanvas">
+        <div class="pbipage">
+          <div class="vis card1"><div class="big">3,846</div><div class="cap">今期 新規契約件数</div><div class="dt up">▲ 12.4% 前年同期比</div></div>
+          <div class="vis card1"><div class="big">218</div><div class="cap">2月 解約件数</div><div class="dt dn">▼ 4.8% 前月比</div></div>
+          <div class="vis card1"><div class="big">96</div><div class="cap">新料金プラン 対象世帯</div><div class="dt up">対象率 44.0%</div></div>
+          <div class="vis card1"><div class="big">▲2,558<span style="font-size:15px">万円</span></div><div class="cap">解約による年間影響額</div><div class="dt dn">▼ 前年 ▲2,891万円</div></div>
+
+          <div class="vis" style="grid-column:span 2;">
+            <div class="vt">月次 新規契約 と 解約の推移<em>⋯</em></div>
+            <div class="vbody"><svg viewBox="0 0 560 190" preserveAspectRatio="none" style="width:100%;height:100%;">
+              <g stroke="#f0f0f0" stroke-width="1">
+                <line x1="40" y1="12"  x2="552" y2="12"/><line x1="40" y1="54" x2="552" y2="54"/>
+                <line x1="40" y1="96" x2="552" y2="96"/><line x1="40" y1="138" x2="552" y2="138"/>
+                <line x1="40" y1="164" x2="552" y2="164"/>
+              </g>
+              <g fill="#605e5c" font-size="9" font-family="Segoe UI">
+                <text x="6" y="16">400</text><text x="6" y="58">300</text><text x="6" y="100">200</text><text x="6" y="142">100</text>
+                <text x="52" y="180">9月</text><text x="136" y="180">10月</text><text x="220" y="180">11月</text>
+                <text x="304" y="180">12月</text><text x="388" y="180">1月</text><text x="472" y="180">2月</text>
+              </g>
+              <polyline fill="none" stroke="#118dff" stroke-width="2.5"
+                points="62,86 146,74 230,68 314,52 398,44 482,30"/>
+              <polyline fill="none" stroke="#e66c37" stroke-width="2.5" stroke-dasharray="0"
+                points="62,128 146,132 230,126 314,134 398,130 482,136"/>
+              <g fill="#118dff">
+                <circle cx="62" cy="86" r="3"/><circle cx="146" cy="74" r="3"/><circle cx="230" cy="68" r="3"/>
+                <circle cx="314" cy="52" r="3"/><circle cx="398" cy="44" r="3"/><circle cx="482" cy="30" r="3.6"/>
+              </g>
+              <g fill="#e66c37">
+                <circle cx="62" cy="128" r="3"/><circle cx="146" cy="132" r="3"/><circle cx="230" cy="126" r="3"/>
+                <circle cx="314" cy="134" r="3"/><circle cx="398" cy="130" r="3"/><circle cx="482" cy="136" r="3.6"/>
+              </g>
+              <g font-size="9" font-family="Segoe UI">
+                <rect x="392" y="4" width="9" height="3" fill="#118dff"/><text x="405" y="8" fill="#605e5c">新規契約</text>
+                <rect x="455" y="4" width="9" height="3" fill="#e66c37"/><text x="468" y="8" fill="#605e5c">解約</text>
+              </g>
+            </svg></div>
+          </div>
+
+          <div class="vis" style="grid-column:span 2;">
+            <div class="vt">営業所別 新規契約件数（今期）<em>⋯</em></div>
+            <div class="vbody"><svg viewBox="0 0 560 190" preserveAspectRatio="none" style="width:100%;height:100%;">
+              <g fill="#605e5c" font-size="9.5" font-family="Segoe UI">
+                <text x="0" y="22">中央営業所</text><text x="0" y="52">東営業所</text><text x="0" y="82">北営業所</text>
+                <text x="0" y="112">西営業所</text><text x="0" y="142">南営業所</text><text x="0" y="172">その他11所</text>
+              </g>
+              <g fill="#118dff">
+                <rect x="76" y="12" width="163" height="14"/><rect x="76" y="42" width="146" height="14"/>
+                <rect x="76" y="72" width="132" height="14"/><rect x="76" y="102" width="123" height="14"/>
+                <rect x="76" y="132" width="117" height="14"/><rect x="76" y="162" width="342" height="14"/>
+              </g>
+              <g fill="#605e5c" font-size="9.5" font-family="Segoe UI">
+                <text x="245" y="23">612</text><text x="228" y="53">548</text><text x="214" y="83">497</text>
+                <text x="205" y="113">463</text><text x="199" y="143">441</text><text x="424" y="173">1,285</text>
+              </g>
+            </svg></div>
+          </div>
+
+          <div class="vis" style="grid-column:span 2;">
+            <div class="vt">営業所別の内訳<em>⋯</em></div>
+            <div class="vbody" style="overflow:auto;">
+              <table class="pbitbl">
+                <thead><tr><th>営業所</th><th class="n">解約</th><th class="n">新料金対象</th><th class="n">対象率</th><th>年間影響額</th></tr></thead>
+                <tbody>
+                  <tr><td>中央営業所</td><td class="n">41</td><td class="n">19</td><td class="n">46.3%</td><td><span class="databar"><i style="width:88%"></i><b>▲482万円</b></span></td></tr>
+                  <tr><td>東営業所</td><td class="n">36</td><td class="n">17</td><td class="n">47.2%</td><td><span class="databar"><i style="width:77%"></i><b>▲421万円</b></span></td></tr>
+                  <tr><td>北営業所</td><td class="n">33</td><td class="n">14</td><td class="n">42.4%</td><td><span class="databar"><i style="width:73%"></i><b>▲402万円</b></span></td></tr>
+                  <tr><td>西営業所</td><td class="n">29</td><td class="n">12</td><td class="n">41.4%</td><td><span class="databar"><i style="width:62%"></i><b>▲338万円</b></span></td></tr>
+                  <tr><td>南営業所</td><td class="n">27</td><td class="n">11</td><td class="n">40.7%</td><td><span class="databar"><i style="width:57%"></i><b>▲311万円</b></span></td></tr>
+                  <tr><td>その他11営業所</td><td class="n">52</td><td class="n">23</td><td class="n">44.2%</td><td><span class="databar"><i style="width:100%"></i><b>▲604万円</b></span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="vis slicer">
+            <div class="vt">期間<em>⋯</em></div>
+            <div class="vbody">
+              <div class="opt"><span class="cbx c">✓</span>今期（2027/04〜）</div>
+              <div class="opt"><span class="cbx"></span>前期</div>
+              <div class="opt"><span class="cbx"></span>過去3年</div>
+            </div>
+          </div>
+          <div class="vis slicer">
+            <div class="vt">営業所<em>⋯</em></div>
+            <div class="vbody">
+              <div class="opt"><span class="cbx c">✓</span>すべて</div>
+              <div class="opt"><span class="cbx"></span>中央営業所</div>
+              <div class="opt"><span class="cbx"></span>東営業所</div>
+              <div class="opt"><span class="cbx"></span>北営業所</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pbifilter">
+          <h4>フィルター</h4>
+          <div class="fg">このページのフィルター</div>
+          <div class="fi"><b>契約区分</b><span>新規</span></div>
+          <div class="fi"><b>契約日</b><span>2027/04/01 〜 2028/02/29</span></div>
+          <div class="fg">すべてのページのフィルター</div>
+          <div class="fi"><b>営業所</b><span>すべて（16）</span></div>
+          <div class="fi"><b>行レベルセキュリティ</b><span>営業所コードで自動適用</span></div>
+          <div style="font-size:11px;color:var(--gray);margin-top:14px;line-height:1.7;border-top:1px solid var(--line2);padding-top:10px;">
+            行レベルセキュリティを設定すると、同じレポートでも営業所ごとに見える行が変わります。
           </div>
         </div>
       </div>
+      <div class="pbitabs">
+        <button class="on">全社サマリー</button><button>営業所別</button><button>解約分析</button><button>新料金の進捗</button>
+      </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ============ エージェント管理 ============ -->
-  <section class="page" id="page-agents" hidden>
-    <div class="pagehead">
-      <h1>エージェント管理</h1>
-      <p>標準エージェントの公開範囲・参照データ・指示文を管理します</p>
+<!-- ================= SharePoint リスト ================= -->
+<section class="screen" id="s-spo" hidden>
+  <div class="suite">
+    <div class="waffle">▦</div><div class="app">SharePoint</div>
+    <div class="search">🔍 このサイトを検索</div>
+    <div class="right"><div class="ib">🔔</div><div class="ib">⚙</div><div class="ib">？</div><div class="me">MK</div></div>
+  </div>
+  <div class="sp">
+    <div class="sphead">
+      <div class="site">
+        <div class="logo">営</div>
+        <div><b>営業推進サイト</b><small>プライベート グループ サイト</small></div>
+        <div class="star">☆ フォローしていません　　👥 メンバー 42人</div>
+      </div>
+      <div class="spnav">
+        <button>ホーム</button><button>ドキュメント</button><button class="on">顧客・活動管理</button>
+        <button>新料金プラン資料</button><button>サイトのコンテンツ</button><button>編集</button>
+      </div>
     </div>
-    <div class="banner">
-      <span>ℹ</span><div>フェーズ1で構築した<b>4つの標準エージェント</b>を、本社マーケティング部で一元管理します。営業所ごとの作り込みは、この標準をコピーして行います。</div>
-    </div>
+    <div class="spmain">
+      <div class="splisthead">
+        <div><h1>顧客・活動管理</h1>
+          <p>訪問記録・案件メモの入力先です。顧客マスタは統合データベース側にあります。</p></div>
+      </div>
 
-    <div class="agrid" id="agentgrid" style="margin-bottom:16px;"></div>
+      <div class="spnote">
+        <b>この画面の設計意図</b>　顧客マスタ（数十万世帯）はリストに置きません。SharePoint リストは1ビューあたり5,000件のしきい値があり、SharePoint Online では変更できないためです。
+        ここに置くのは<b>営業が書き込む側の情報だけ</b>（訪問記録・案件の状況・次アクション）。見送った CRM の代わりに、入力項目を絞った軽量な受け皿として使います。
+      </div>
 
-    <div class="card">
-      <h3 id="agdetail-title">エージェントの設定</h3><div class="sub" id="agdetail-sub">カードを選択すると詳細が表示されます</div>
-      <div class="grid2">
-        <div>
-          <dl class="kv" id="agdetail-kv"></dl>
+      <div class="spcmd">
+        <button class="new">＋ 新規</button>
+        <button>▤ グリッドビューでの編集</button>
+        <button>↗ 共有</button>
+        <button>⬇ エクスポート</button>
+        <button>⚡ 自動化</button>
+        <button>🔗 統合</button>
+        <button>⋯</button>
+        <div class="right">
+          <button>🔍</button>
+          <button class="viewsel">すべてのアイテム <span style="font-size:9px;color:var(--gray)">▼</span></button>
+          <button>🔽</button><button>ℹ</button>
         </div>
-        <div>
-          <div style="font-size:11.5px; color:var(--gray); font-weight:700;">AIへの指示文（プロンプト）</div>
-          <div class="prompt" id="agdetail-prompt"></div>
+      </div>
+
+      <div class="spwrap">
+        <div class="sptblwrap">
+          <table class="sptbl">
+            <thead><tr>
+              <th style="width:34px;"></th>
+              <th>顧客ID <span class="ch">▼</span></th><th>エリア <span class="ch">▼</span></th>
+              <th>営業所 <span class="ch">▼</span></th><th>案件の状況 <span class="ch">▼</span></th>
+              <th>次アクション <span class="ch">▼</span></th><th>予定日 <span class="ch">▼</span></th>
+              <th>担当 <span class="ch">▼</span></th><th>更新日時 <span class="ch">▼</span></th>
+            </tr></thead>
+            <tbody id="spbody"></tbody>
+          </table>
+          <div style="font-size:11.5px;color:var(--gray);padding:11px 10px;">10 件中 1-10 件を表示しています</div>
+        </div>
+        <div class="sppane" id="sppane"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 展開・定着管理 ================= -->
+<section class="screen" id="s-dg" hidden>
+  <div class="suite">
+    <div class="waffle">▦</div><div class="app">展開・定着管理</div>
+    <div class="search">🔍 検索</div>
+    <div class="right"><div class="ib">⚙</div><div class="ib">？</div><div class="me">MK</div></div>
+  </div>
+  <div class="dg">
+    <h1>展開・定着管理</h1>
+    <p class="lead">「作って終わり」にしないための画面です。使われているかを数字で見て、次の手を決めます。</p>
+
+    <div class="dgrid">
+      <div class="dk"><div class="l">稼働中のAIマスター</div><div class="v">38<span>名</span></div><div class="d">目標40名に対し 95%</div></div>
+      <div class="dk"><div class="l">今月の質問数</div><div class="v">4,812<span>件</span></div><div class="d">前月比 +18.4%</div></div>
+      <div class="dk"><div class="l">削減時間（試算）</div><div class="v">1,240<span>時間</span></div><div class="d">前月比 +212時間</div></div>
+      <div class="dk"><div class="l">展開済み営業所</div><div class="v">16<span>／16</span></div><div class="d">2028年2月に完了</div></div>
+    </div>
+
+    <div class="d2" style="margin-bottom:16px;">
+      <div class="dbox">
+        <h3>営業所一覧</h3>
+        <div class="hint">利用率＝当月に1回以上エージェントを使った登録ユーザーの割合</div>
+        <table class="dtbl">
+          <thead><tr><th>営業所</th><th class="c">AIマスター</th><th class="n">登録ユーザー</th><th>今月の利用率</th><th class="n">質問数</th><th class="c">状態</th></tr></thead>
+          <tbody id="offbody"></tbody>
+        </table>
+      </div>
+      <div class="dbox">
+        <h3>回答できなかった質問</h3>
+        <div class="hint">毎月レビューして、ナレッジと用語辞書に反映していきます</div>
+        <table class="dtbl">
+          <thead><tr><th>質問</th><th>原因</th><th class="c">件数</th></tr></thead>
+          <tbody>
+            <tr><td>値引き後の実質単価で絞りたい</td><td>統合DBに項目なし</td><td class="n">4</td></tr>
+            <tr><td>「切替済み」の定義が担当ごとに違う</td><td>用語のゆれ</td><td class="n">3</td></tr>
+            <tr><td>競合他社の料金と比較したい</td><td>社外データ・対象外</td><td class="n">3</td></tr>
+            <tr><td>過去5年分の推移を出したい</td><td>保持期間が3年</td><td class="n">2</td></tr>
+          </tbody>
+        </table>
+        <div class="hint" style="margin-top:12px;">
+          <b style="color:var(--ink)">削減時間の試算</b>　4,812件 × 15分 ＝ 1,203時間／月　＋報告書作成分 37時間 ＝ 1,240時間／月<br>
+          ※「1件の質問＝従来15分のデータ収集・加工」という前提での試算値です。
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- ============ 営業所・AIマスター ============ -->
-  <section class="page" id="page-offices" hidden>
-    <div class="pagehead">
-      <h1>営業所・AIマスター管理</h1>
-      <p>16営業所の展開状況とAIマスターの配置　／　各所1〜2名＋本社で計38名</p>
-    </div>
-    <div class="grid4" style="margin-bottom:16px;">
-      <div class="kpi"><div class="lab">展開済み営業所</div><div class="val">16<span>／16</span></div><div class="delta">2028年2月完了</div></div>
-      <div class="kpi b"><div class="lab">AIマスター</div><div class="val">38<span>名</span></div><div class="delta">営業所32名＋本社6名</div></div>
-      <div class="kpi o"><div class="lab">登録ユーザー</div><div class="val">486<span>名</span></div><div class="delta">営業担当のうち 97%</div></div>
-      <div class="kpi g"><div class="lab">今月の平均利用率</div><div class="val">72<span>%</span></div><div class="delta">前月比 +9pt</div></div>
-    </div>
-
-    <div class="card">
-      <h3>営業所一覧</h3><div class="sub">利用率＝当月に1回以上AIデータ照会を使った登録ユーザーの割合</div>
-      <div class="filters" id="offfilters">
-        <button class="on" data-f="all">すべて（16）</button>
-        <button data-f="ok">順調（12）</button>
-        <button data-f="mid">フォロー要（3）</button>
-        <button data-f="new">立ち上げ中（1）</button>
-      </div>
-      <table>
-        <thead><tr><th>営業所</th><th class="ctr">AIマスター</th><th class="num">登録ユーザー</th><th>今月の利用率</th><th class="num">今月の質問数</th><th>最終利用</th><th class="ctr">状態</th></tr></thead>
-        <tbody id="offbody"></tbody>
-      </table>
-      <div class="legend">※ 数値はすべて架空のサンプルです</div>
-    </div>
-  </section>
-
-  <!-- ============ 利用状況・効果 ============ -->
-  <section class="page" id="page-usage" hidden>
-    <div class="pagehead">
-      <h1>利用状況・効果測定</h1>
-      <p>「使われているか」を数字で見て、次の手を決めるための画面です</p>
-    </div>
-    <div class="banner warn">
-      <span>⚠</span><div>削減時間は<b>試算値</b>です。「1件の質問＝従来15分のデータ収集・加工に相当」という前提で自動計算しています。前提値は設定画面で変更できます。</div>
-    </div>
-
-    <div class="grid32" style="margin-bottom:16px;">
-      <div class="card">
-        <h3>営業所別の利用率</h3><div class="sub">今月（3月）／ 全社平均 72%</div>
+    <div class="d2">
+      <div class="dbox">
+        <h3>営業所別の利用率</h3>
+        <div class="hint">全社平均 72%　／ 50%を下回る所はフォロー対象として自動抽出</div>
         <div id="usagebars"></div>
-        <div class="legend">※ 利用率が低い営業所は、AIマスターへのフォロー対象として自動で抽出されます</div>
       </div>
-      <div class="card">
-        <h3>質問カテゴリの内訳</h3><div class="sub">何に使われているか</div>
-        <div class="hbar"><span>契約・顧客の照会</span><div class="track"><div class="fill n" style="width:38%"></div></div><span class="num">38%</span></div>
-        <div class="hbar"><span>訪問先の絞り込み</span><div class="track"><div class="fill" style="width:24%"></div></div><span class="num">24%</span></div>
-        <div class="hbar"><span>実績・進捗の集計</span><div class="track"><div class="fill" style="width:16%"></div></div><span class="num">16%</span></div>
-        <div class="hbar"><span>提案の下ごしらえ</span><div class="track"><div class="fill g" style="width:13%"></div></div><span class="num">13%</span></div>
-        <div class="hbar"><span>報告書・資料作成</span><div class="track"><div class="fill o" style="width:9%"></div></div><span class="num">9%</span></div>
-        <div class="legend" style="margin-top:14px;">
-          <b style="color:var(--navy)">削減時間の試算</b><br>
-          4,812件 × 15分 ＝ 1,203時間／月<br>
-          ＋ 報告書作成分 37時間 ＝ <b style="color:var(--orange)">1,240時間／月</b>
-        </div>
+      <div class="dbox">
+        <h3>質問カテゴリの内訳</h3>
+        <div class="hint">何に使われているか</div>
+        <div class="hb"><span>契約・顧客の照会</span><div class="t"><div class="f" style="width:38%"></div></div><span class="n">38%</span></div>
+        <div class="hb"><span>訪問先の絞り込み</span><div class="t"><div class="f" style="width:24%"></div></div><span class="n">24%</span></div>
+        <div class="hb"><span>実績・進捗の集計</span><div class="t"><div class="f" style="width:16%"></div></div><span class="n">16%</span></div>
+        <div class="hb"><span>提案の下ごしらえ</span><div class="t"><div class="f" style="width:13%"></div></div><span class="n">13%</span></div>
+        <div class="hb"><span>報告書・資料作成</span><div class="t"><div class="f" style="width:9%"></div></div><span class="n">9%</span></div>
       </div>
     </div>
-
-    <div class="card">
-      <h3>回答できなかった質問（改善候補）</h3><div class="sub">AIが答えられなかった質問を残し、毎月レビューして潰していきます</div>
-      <table>
-        <thead><tr><th>質問</th><th>原因の分類</th><th>対応方針</th><th class="ctr">件数</th><th class="ctr">状態</th></tr></thead>
-        <tbody>
-          <tr><td>「値引き後の実質単価」で絞り込みたい</td><td>統合DBに該当項目がない</td><td>販売管理側の項目追加を依頼</td><td class="num">4</td><td><span class="pill hot">要検討</span></td></tr>
-          <tr><td>「切替済み」の定義が担当ごとに違う</td><td>用語のゆれ</td><td>用語辞書に定義を登録</td><td class="num">3</td><td><span class="pill on">対応中</span></td></tr>
-          <tr><td>競合他社の料金と比較したい</td><td>社外データのため対象外</td><td>スコープ外として明示</td><td class="num">3</td><td><span class="pill off">対象外</span></td></tr>
-          <tr><td>過去5年分の推移を出したい</td><td>統合DBの保持期間が3年</td><td>保持期間の見直しを検討</td><td class="num">2</td><td><span class="pill hot">要検討</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ============ データソース連携 ============ -->
-  <section class="page" id="page-data" hidden>
-    <div class="pagehead">
-      <h1>データソース連携</h1>
-      <p>統合データベース側は読み取り専用で参照します　／　既存システムには変更を加えません</p>
-    </div>
-    <div class="banner">
-      <span>ℹ</span><div>AIが直接触るのは<b>統合データベース（BigQuery）だけ</b>です。各基幹システムからの連携は、統合データベース側の既存フローをそのまま利用します。</div>
-    </div>
-    <div class="card">
-      <h3>参照テーブル</h3><div class="sub">エージェントが参照する統合データベース内のテーブル（抜粋）</div>
-      <table>
-        <thead><tr><th>テーブル</th><th>内容</th><th>更新頻度</th><th>権限の扱い</th><th class="ctr">状態</th></tr></thead>
-        <tbody>
-          <tr><td>customer_master</td><td>顧客マスタ（世帯・契約者情報）</td><td>日次 06:00</td><td>営業所コードでフィルタ</td><td><span class="pill ok">正常</span></td></tr>
-          <tr><td>contract</td><td>契約・料金プラン</td><td>日次 06:00</td><td>営業所コードでフィルタ</td><td><span class="pill ok">正常</span></td></tr>
-          <tr><td>usage_monthly</td><td>月次の使用量・請求</td><td>月次 締め後</td><td>金額列は管理者のみ</td><td><span class="pill ok">正常</span></td></tr>
-          <tr><td>inspection</td><td>保安点検の実施履歴</td><td>日次 06:00</td><td>営業所コードでフィルタ</td><td><span class="pill ok">正常</span></td></tr>
-          <tr><td>churn_log</td><td>解約・切替の履歴</td><td>日次 06:00</td><td>営業所コードでフィルタ</td><td><span class="pill ok">正常</span></td></tr>
-          <tr><td>campaign</td><td>新料金プラン・施策マスタ</td><td>随時</td><td>全社共通</td><td><span class="pill ok">正常</span></td></tr>
-        </tbody>
-      </table>
-      <div class="legend">※ 実際の項目名・粒度・更新頻度は、要件定義フェーズで統合データベースの仕様を確認して確定します</div>
-    </div>
-
-    <div class="foot">
-      本デモはUIシミュレーションです。実際のデータベースには接続していません。表示される営業所名・数値・顧客情報はすべて架空のサンプルです。
-    </div>
-  </section>
-
-  </main>
-</div>
+  </div>
+</section>
 
 <div class="stamp">サンプルデータ</div>
 
 <script>
 (function(){
   "use strict";
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-  /* ================= ページ切り替え ================= */
-  var navs = Array.prototype.slice.call(document.querySelectorAll(".side .nav"));
-  function show(id){
-    navs.forEach(function(n){ n.classList.toggle("on", n.dataset.page === id); });
-    Array.prototype.forEach.call(document.querySelectorAll(".page"), function(p){
-      p.hidden = (p.id !== "page-" + id);
+  /* ========== 画面切り替え ========== */
+  var tabs = [].slice.call(document.querySelectorAll(".demobar button"));
+  tabs.forEach(function(b){
+    b.addEventListener("click", function(){
+      tabs.forEach(function(x){ x.classList.toggle("on", x === b); });
+      [].forEach.call(document.querySelectorAll(".screen"), function(s){
+        s.hidden = (s.id !== "s-" + b.dataset.s);
+      });
+      window.scrollTo(0,0);
     });
-    window.scrollTo(0,0);
-  }
-  navs.forEach(function(n){ n.addEventListener("click", function(){ show(n.dataset.page); }); });
+  });
 
-  /* ================= 権限（ロール切り替え） ================= */
+  /* ========== 権限 ========== */
   var ROLES = {
-    hq:     {av:"本", office:null, scope:"全営業所・全項目",
-             note:"全営業所・全項目<br>（本社マーケティング部の権限）", admin:true,  mask:false},
-    master: {av:"中", office:"中央営業所", scope:"中央営業所・全項目",
-             note:"中央営業所のみ<br>（AIマスターの権限）", admin:true, mask:false},
-    sales:  {av:"営", office:"中央営業所", scope:"中央営業所（金額列は非表示）",
-             note:"中央営業所のみ<br>金額に関する列は参照不可", admin:false, mask:true}
+    hq:     {av:"MK", office:null, scope:"全営業所・全項目", mask:false,
+             note:"全営業所・全項目を参照できます。"},
+    master: {av:"AM", office:"中央営業所", scope:"中央営業所・全項目", mask:false,
+             note:"中央営業所の行のみ参照できます。他営業所はクエリ側で除外されます。"},
+    sales:  {av:"営", office:"中央営業所", scope:"中央営業所（金額列は非表示）", mask:true,
+             note:"中央営業所の行のみ、かつ金額に関する列は参照できません。"}
   };
-  var roleSel = document.getElementById("role");
   var curRole = "hq";
-  function applyRole(){
-    var r = ROLES[curRole];
-    document.getElementById("avatar").textContent = r.av;
-    document.getElementById("scopenote").innerHTML = "<b>参照できる範囲</b><br>" + r.note;
-    document.getElementById("askbanner").innerHTML =
-      '<span>ℹ</span><div>参照範囲：<b>' + r.scope + '</b>　権限はAIへの指示ではなく、<b>検索時のフィルタ</b>として適用されます</div>';
-    navs.forEach(function(n){ if(n.dataset.admin){ n.hidden = !r.admin; } });
-    document.getElementById("adminhead").hidden = !r.admin;
-    var cur = document.querySelector(".side .nav.on");
-    if(cur && cur.hidden){ show("dash"); }
-    renderChat();
-  }
-  roleSel.addEventListener("change", function(){ curRole = roleSel.value; applyRole(); });
 
-  /* ================= AIデータ照会 ================= */
+  /* ========== 会話シナリオ ========== */
   var Q = [
     {
-      tag:"顧客データ照会",
-      q:"先月解約した世帯のうち、新料金プランの対象になるのは何件？",
-      steps:["質問を解析（対象期間＝2028年2月／条件＝解約＋新料金対象）",
-             "参照範囲を判定（{scope}）",
-             "統合データベースを照会（churn_log × contract × campaign）",
-             "集計して結果を整形"],
+      label:"先月解約した世帯のうち、新料金プランの対象は何件？",
+      think:["ツールを選択：顧客データを照会する",
+             "権限フィルタ：{scope}",
+             "BigQuery 実行：churn_log × contract × campaign",
+             "集計 218件 → 対象 96件"],
       lead:"2028年2月に解約された世帯は <b>218件</b>、うち新料金プランの適用条件を満たすのは <b>96件</b>（44.0%）です。営業所別の内訳は次のとおりです。",
       leadScoped:"2028年2月に中央営業所で解約された世帯は <b>41件</b>、うち新料金プランの適用条件を満たすのは <b>19件</b>（46.3%）です。",
       cols:["営業所","解約件数","うち新料金対象","対象率","平均契約年数","年間影響額"],
@@ -506,34 +820,34 @@
             ["南営業所","27","11","40.7%","7.9年","▲311万円"],
             ["その他11営業所","52","23","44.2%","8.0年","▲604万円"]],
       total:["合計","218","96","44.0%","7.8年","▲2,558万円"],
-      src:"churn_log（2028/03/14 06:00 同期）／ contract ／ campaign",
-      sql:"SELECT o.office_name,\n       COUNT(*) AS churn_cnt,\n       COUNTIF(c.plan_eligible) AS target_cnt,\n       ROUND(COUNTIF(c.plan_eligible)/COUNT(*)*100,1) AS target_rate\nFROM `core.churn_log` AS l\nJOIN `core.contract`  AS c USING (contract_id)\nJOIN `core.office`    AS o USING (office_cd)\nWHERE l.churn_date BETWEEN '2028-02-01' AND '2028-02-29'\n  AND c.plan_eligible = TRUE\nGROUP BY o.office_name\nORDER BY churn_cnt DESC"
+      srcs:["churn_log ／ contract ／ campaign（2028/03/14 06:00 同期）"],
+      used:["ツール：顧客データを照会する","ナレッジ：統合データベース（BigQuery）","接続：カスタムコネクタ（プレミアム）"]
     },
     {
-      tag:"優先アプローチ抽出",
-      q:"今月まだ訪問していない顧客から、優先的に回るべき先を出して",
-      steps:["質問を解析（条件＝今月未訪問／優先度の高い順）",
-             "参照範囲を判定（{scope}）",
-             "統合データベースを照会（customer_master × inspection × contract）",
-             "優先度スコアを算出して並べ替え"],
-      lead:"今月まだ訪問記録のない顧客のうち、<b>契約更新が近い・使用量が減少している・保安点検が近い</b>の3条件でスコアを付け、上位から並べました（全 <b>142件</b> 中の上位5件）。",
+      label:"今月まだ訪問していない顧客から、優先的に回るべき先を出して",
+      think:["ツールを選択：優先訪問先を抽出する",
+             "権限フィルタ：{scope}",
+             "BigQuery 実行：customer_master × inspection × contract",
+             "SharePoint リスト参照：今月の訪問記録を突合",
+             "スコア算出 → 上位から並べ替え（該当142件）"],
+      lead:"今月まだ訪問記録のない顧客のうち、<b>契約更新の近さ・使用量の減少・保安点検の近さ</b>の3条件でスコアを付けました（全 <b>142件</b> 中の上位5件）。",
       cols:["優先度","顧客ID","エリア","契約更新","直近3ヶ月の使用量","訪問すべき理由"],
       rows:[["1","C-20418","中央3区","2028/04/12","前年比 -22%","更新が1ヶ月以内／使用量が大きく減少"],
             ["2","C-11876","中央1区","2028/05/03","前年比 -18%","使用量減少が3ヶ月連続"],
             ["3","C-30251","中央5区","2028/04/28","前年比 -6%","保安点検の予定日が近い"],
             ["4","C-22940","中央2区","2028/06/15","前年比 -15%","近隣で切替が3件発生"],
             ["5","C-19733","中央4区","2028/07/01","前年比 -11%","前回訪問から8ヶ月経過"]],
-      src:"customer_master ／ inspection ／ contract ／ churn_log",
-      sql:"WITH scored AS (\n  SELECT m.customer_id, m.area_cd, c.renewal_date,\n         u.yoy_rate, i.next_inspection_date,\n         (CASE WHEN DATE_DIFF(c.renewal_date, CURRENT_DATE(), DAY) <= 30 THEN 3 ELSE 0 END)\n       + (CASE WHEN u.yoy_rate < -0.15 THEN 3 ELSE 0 END)\n       + (CASE WHEN i.next_inspection_date <= DATE_ADD(CURRENT_DATE(), INTERVAL 30 DAY) THEN 2 ELSE 0 END)\n         AS priority\n  FROM `core.customer_master` AS m\n  LEFT JOIN `core.contract`   AS c USING (customer_id)\n  LEFT JOIN `core.usage_yoy`  AS u USING (customer_id)\n  LEFT JOIN `core.inspection` AS i USING (customer_id)\n  WHERE m.office_cd = @office_cd          -- 権限フィルタ\n    AND m.last_visit_month <> '2028-03'\n)\nSELECT * FROM scored ORDER BY priority DESC LIMIT 20"
+      srcs:["customer_master ／ inspection ／ contract ／ churn_log",
+            "顧客・活動管理リスト（SharePoint）― 今月の訪問記録"],
+      used:["ツール：優先訪問先を抽出する","ナレッジ：統合データベース（BigQuery）","ナレッジ：顧客・活動管理リスト（SharePoint）"]
     },
     {
-      tag:"実績の集計",
-      q:"今期の契約件数を、営業所別に前年同期と比べて",
-      steps:["質問を解析（期間＝2027年4月〜2028年2月／比較＝前年同期）",
-             "参照範囲を判定（{scope}）",
-             "統合データベースを照会（contract × office）",
+      label:"今期の契約件数を、営業所別に前年同期と比べて",
+      think:["ツールを選択：顧客データを照会する",
+             "権限フィルタ：{scope}",
+             "BigQuery 実行：contract × office（2期分）",
              "前年同期と対比して集計"],
-      lead:"今期（2027年4月〜2028年2月）の新規契約は <b>3,846件</b>、前年同期比 <b>+12.4%</b> です。新料金プランの投入以降、増加幅が広がっています。",
+      lead:"今期（2027年4月〜2028年2月）の新規契約は <b>3,846件</b>、前年同期比 <b>+12.4%</b> です。同じ数字は Power BI の「営業実績ダッシュボード」でも毎日更新されています。",
       leadScoped:"中央営業所の今期（2027年4月〜2028年2月）の新規契約は <b>612件</b>、前年同期比 <b>+11.9%</b> です。",
       cols:["営業所","今期","前年同期","増減","増減率"],
       rows:[["中央営業所","612","547","+65","+11.9%"],
@@ -543,235 +857,194 @@
             ["南営業所","441","396","+45","+11.4%"],
             ["その他11営業所","1,285","1,128","+157","+13.9%"]],
       total:["合計","3,846","3,422","+424","+12.4%"],
-      src:"contract（2028/03/14 06:00 同期）／ office",
-      sql:"SELECT o.office_name,\n       COUNTIF(c.contract_date BETWEEN '2027-04-01' AND '2028-02-29') AS this_term,\n       COUNTIF(c.contract_date BETWEEN '2026-04-01' AND '2027-02-28') AS last_term\nFROM `core.contract` AS c\nJOIN `core.office`   AS o USING (office_cd)\nWHERE c.contract_type = 'NEW'\nGROUP BY o.office_name\nORDER BY this_term DESC"
+      srcs:["contract ／ office（2028/03/14 06:00 同期）"],
+      used:["ツール：顧客データを照会する","ナレッジ：統合データベース（BigQuery）","※ 定型で毎月見る数字は Power BI 側に置きます"]
     },
     {
-      tag:"提案トーク生成",
-      q:"顧客C-20418への切替提案のトーク骨子を作って",
-      steps:["質問を解析（対象＝顧客C-20418／目的＝切替提案）",
-             "参照範囲を判定（{scope}）",
-             "統合データベースを照会（customer_master × contract × usage_monthly）",
-             "契約内容に合わせて説明の骨子を生成"],
-      lead:"顧客 <b>C-20418</b>（契約8年2ヶ月・4人世帯・直近3ヶ月の使用量が前年比 -22%）向けの骨子です。<b>そのまま読む台本ではなく、話す順番のメモ</b>としてお使いください。",
-      talk:[
-        "① 入り口：先日の保安点検のお礼＋「ご使用量が少し変わっていたので」と切り出す",
-        "② 事実の共有：直近3ヶ月の使用量が前年より約2割減っていることを、検針票の数字で示す",
-        "③ 提案：現在のプランのままだと基本料金の比率が上がるため、新料金プランなら月あたり約620円の差になる",
-        "④ 懸念への先回り：切替に伴う工事・費用は不要。契約は現行のまま継続できる",
-        "⑤ クロージング：次回の点検（4月）に合わせて手続きできる旨を伝え、その場で日程を押さえる"
-      ],
-      src:"customer_master ／ contract ／ usage_monthly ／ campaign（新料金プラン定義）",
-      sql:"SELECT m.customer_id, m.household_size, c.plan_cd, c.contract_start,\n       u.usage_yoy_3m, p.plan_name, p.base_fee, p.unit_price\nFROM `core.customer_master` AS m\nJOIN `core.contract`       AS c USING (customer_id)\nJOIN `core.usage_monthly`  AS u USING (customer_id)\nJOIN `core.campaign`       AS p ON p.plan_cd = 'NEW2027'\nWHERE m.customer_id = 'C-20418'"
+      label:"顧客C-20418への切替提案のトーク骨子を作って",
+      think:["ツールを選択：提案の骨子を作る",
+             "権限フィルタ：{scope}",
+             "BigQuery 実行：customer_master × contract × usage_monthly",
+             "ナレッジ参照：新料金プラン 説明資料（PDF）",
+             "契約内容に合わせて骨子を生成"],
+      lead:"顧客 <b>C-20418</b>（契約8年2ヶ月・4人世帯・直近3ヶ月の使用量が前年比 -22%）向けの骨子です。<b>読み上げる台本ではなく、話す順番のメモ</b>としてお使いください。",
+      talk:["① 入り口：先日の保安点検のお礼＋「ご使用量が少し変わっていたので」と切り出す",
+            "② 事実の共有：直近3ヶ月の使用量が前年より約2割減っていることを、検針票の数字で示す",
+            "③ 提案：現在のプランのままだと基本料金の比率が上がるため、新料金プランなら月あたり約620円の差になる",
+            "④ 懸念への先回り：切替に伴う工事・費用は不要。契約は現行のまま継続できる",
+            "⑤ クロージング：次回の点検（4月）に合わせて手続きできる旨を伝え、その場で日程を押さえる"],
+      srcs:["customer_master ／ contract ／ usage_monthly",
+            "新料金プラン 説明資料（SharePoint ドキュメントライブラリ）"],
+      used:["ツール：提案の骨子を作る","ナレッジ：統合データベース（BigQuery）","ナレッジ：新料金プラン 説明資料（PDF）",
+            "この後「活動記録を登録する」で SharePoint リストに保存できます"]
     }
   ];
 
-  var qlist = document.getElementById("qlist");
-  var chatlog = document.getElementById("chatlog");
   var curQ = 0;
-
+  var sugg = document.getElementById("sugg");
   Q.forEach(function(item, i){
     var b = document.createElement("button");
-    b.className = "q" + (i === 0 ? " on" : "");
-    b.innerHTML = '<span class="tag">' + item.tag + '</span>' + item.q;
+    b.textContent = item.label;
+    if(i === 0){ b.className = "on"; }
     b.addEventListener("click", function(){
       curQ = i;
-      Array.prototype.forEach.call(qlist.children, function(c, j){ c.classList.toggle("on", j === i); });
+      [].forEach.call(sugg.children, function(c, j){ c.classList.toggle("on", j === i); });
       renderChat();
     });
-    qlist.appendChild(b);
+    sugg.appendChild(b);
   });
-  document.getElementById("qsend").addEventListener("click", renderChat);
-
-  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
   function renderChat(){
     var item = Q[curQ], r = ROLES[curRole];
-    var mask = r.mask;
+    var scoped = false, dropped = false;
+    var body = "";
 
-    var steps = item.steps.map(function(s){
-      return '<div class="s"><span class="tick">✓</span><span>' + s.replace("{scope}", r.scope) + '</span></div>';
-    }).join("");
-
-    var body = "", scoped = false, dropped = false;
     if(item.cols){
-      // 権限フィルタ①：営業所の範囲で行を絞り込む（検索時のフィルタ相当）
       var cols = item.cols.slice(), data = item.rows.slice(), total = item.total;
       if(r.office && data.length && data[0][0].indexOf("営業所") >= 0){
         var hit = data.filter(function(row){ return row[0] === r.office; });
         if(hit.length){ data = hit; total = null; scoped = true; }
       }
-      // 権限フィルタ②：金額に関する列を落とす
-      if(mask && item.moneyCols){
+      if(r.mask && item.moneyCols){
         var drop = item.moneyCols;
-        var keep = function(arr){ return arr.filter(function(v, i){ return drop.indexOf(i) < 0; }); };
+        var keep = function(a){ return a.filter(function(v,i){ return drop.indexOf(i) < 0; }); };
         cols = keep(cols); data = data.map(keep); if(total){ total = keep(total); }
         dropped = true;
       }
-      var head = cols.map(function(c, i){
-        return '<th class="' + (i === 0 ? "" : "num") + '">' + c + '</th>';
-      }).join("");
+      var head = cols.map(function(c,i){ return '<th class="'+(i?"n":"")+'">'+esc(c)+'</th>'; }).join("");
       var rows = data.map(function(row){
-        return "<tr>" + row.map(function(v, i){
-          return '<td class="' + (i === 0 ? "" : "num") + '">' + esc(v) + '</td>';
-        }).join("") + "</tr>";
+        return "<tr>" + row.map(function(v,i){ return '<td class="'+(i?"n":"")+'">'+esc(v)+'</td>'; }).join("") + "</tr>";
       }).join("");
       if(total){
-        rows += '<tr style="font-weight:700;background:#fdf5e3;">' + total.map(function(v, i){
-          return '<td class="' + (i === 0 ? "" : "num") + '">' + esc(v) + '</td>';
-        }).join("") + "</tr>";
+        rows += '<tr style="font-weight:600;background:#faf9f8;">' +
+          total.map(function(v,i){ return '<td class="'+(i?"n":"")+'">'+esc(v)+'</td>'; }).join("") + "</tr>";
       }
-      body = '<div class="tblwrap"><table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+      body = '<div class="reftbl"><table><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
     } else if(item.talk){
-      body = '<div style="background:var(--pale);border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:12.5px;line-height:1.9;">'
+      body = '<div style="background:#faf9f8;border:1px solid var(--line);border-radius:6px;padding:11px 14px;font-size:12.5px;line-height:2;margin-top:11px;">'
            + item.talk.map(esc).join("<br>") + '</div>';
     }
 
     var msgs = [];
-    if(scoped){ msgs.push("参照できるのは<b>" + r.office + "</b>の範囲のみのため、他営業所の行は検索段階で除外されています。"); }
-    if(dropped){ msgs.push("営業担当の権限では<b>金額に関する列は表示されません</b>。"); }
-    var note = msgs.length
-      ? '<div class="banner warn" style="margin:11px 0 0;font-size:11.5px;"><span>⚠</span><div>' + msgs.join("<br>") + '</div></div>'
-      : "";
+    if(scoped){ msgs.push("参照できるのは<b>" + r.office + "</b>の範囲のみのため、他営業所の行はクエリ側の条件で除外されています。"); }
+    if(dropped){ msgs.push("このユーザーの権限では<b>金額に関する列は返しません</b>。"); }
+    var warn = msgs.length ? '<div class="warnbox">'+msgs.join("<br>")+'</div>' : "";
 
-    chatlog.innerHTML =
-      '<div class="msg user"><div class="ava">' + r.av + '</div><div class="bubble">' + esc(item.q) + '</div></div>' +
-      '<div class="msg ai"><div class="ava">AI</div><div class="bubble">' +
-        '<div class="steps">' + steps + '</div>' +
-        '<div class="ansbox"><p>' + (scoped && item.leadScoped ? item.leadScoped : item.lead) + '</p>' + body +
-          note +
-          '<div class="src">参照データ：<b>' + esc(item.src) + '</b></div>' +
-          '<details class="sql"><summary>AIが生成したクエリを表示</summary><pre>' + esc(item.sql) + '</pre></details>' +
-        '</div>' +
-      '</div></div>';
+    var think = item.think.map(function(s){ return esc(s.replace("{scope}", r.scope)).replace("&lt;b&gt;","<b>"); }).join("<br>");
+    var srcs = item.srcs.map(function(s,i){
+      return '<div class="s"><span class="cite">'+(i+1)+'</span><span>'+esc(s)+'</span></div>';
+    }).join("");
+    var cites = item.srcs.map(function(_,i){ return '<span class="cite">'+(i+1)+'</span>'; }).join("");
+
+    document.getElementById("chatfull").innerHTML =
+      '<div class="cmsg u"><div class="bb">'+esc(item.label)+'</div></div>' +
+      '<div class="cmsg a">' +
+        '<div class="who"><span class="av">✦</span>営業データアシスタント</div>' +
+        '<div class="think">'+think+'</div>' +
+        '<div class="bb">' + (scoped && item.leadScoped ? item.leadScoped : item.lead) + ' ' + cites + '</div>' +
+        body + warn +
+        '<div class="srcs">'+srcs+'</div>' +
+      '</div>';
+
+    document.getElementById("usedbox").innerHTML =
+      item.used.map(function(u){ return "・" + esc(u); }).join("<br>");
+    document.getElementById("scopebox").innerHTML = esc(r.note).replace(/(中央営業所|全営業所)/g, "<b>$1</b>");
+    [].forEach.call(document.querySelectorAll(".suite .me"), function(e){ e.textContent = r.av; });
   }
 
-  /* ================= エージェント管理 ================= */
-  var AGENTS = [
-    {ic:"🔍", name:"顧客データ照会", on:true,
-     use:"契約・顧客・使用量を横断して集計する", scope:"全営業所（権限フィルタ適用）",
-     tables:"customer_master / contract / usage_monthly / inspection",
-     out:"表形式＋件数の根拠", limit:"1回の出力は最大500行", updated:"2028/02/20",
-     uses:"2,213件／月",
-     prompt:"あなたは営業担当のデータ照会を助けるアシスタントです。\n\n・回答は必ず統合データベースの集計結果のみに基づくこと\n・推測で数値を補わない。該当データが無い場合は「該当なし」と答える\n・件数を答えるときは、必ず集計に使った条件を併記する\n・ログインユーザーの営業所コードの範囲外は参照しない"},
-    {ic:"🎯", name:"優先アプローチ抽出", on:true,
-     use:"訪問すべき顧客を条件付きで絞り込む", scope:"自営業所のみ",
-     tables:"customer_master / contract / usage_yoy / inspection / churn_log",
-     out:"優先度順のリスト＋理由", limit:"1回の出力は最大50件", updated:"2028/03/14",
-     uses:"1,299件／月",
-     prompt:"あなたは営業担当の訪問計画を助けるアシスタントです。\n\n・優先度は「契約更新の近さ」「使用量の減少」「保安点検の近さ」で算出する\n・必ず1件ごとに「訪問すべき理由」を1行で添える\n・個人の連絡先は出力しない（顧客IDのみ）\n・営業所コードの範囲外の顧客は対象に含めない"},
-    {ic:"💬", name:"提案トーク生成", on:true,
-     use:"契約内容に合わせた説明の骨子を作る", scope:"自営業所のみ",
-     tables:"customer_master / contract / usage_monthly / campaign",
-     out:"話す順番のメモ（5項目）", limit:"顧客1件ずつ", updated:"2028/03/09",
-     uses:"818件／月",
-     prompt:"あなたは営業担当の提案準備を助けるアシスタントです。\n\n・出力は「読み上げる台本」ではなく「話す順番のメモ」とする\n・料金の説明には、必ず統合データベース上の実際の契約内容を使う\n・断定的な優位表現、他社との比較は書かない\n・金額を示すときは前提条件（プラン名・期間）を必ず添える"},
-    {ic:"📄", name:"報告・資料作成", on:false,
-     use:"日報・営業所報告のドラフトを作る", scope:"全営業所（権限フィルタ適用）",
-     tables:"contract / churn_log / office",
-     out:"報告書のドラフト（本文）", limit:"月次・週次の定型のみ", updated:"2028/01/16",
-     uses:"482件／月",
-     prompt:"あなたは営業所の報告書作成を助けるアシスタントです。\n\n・数値は統合データベースの集計結果をそのまま使い、丸めない\n・所感や評価は書かず、事実と数値のみを並べる\n・前月比・前年同月比を必ず併記する\n・提出前に人が確認する前提の「ドラフト」であることを冒頭に書く"}
-  ];
-
-  var agentgrid = document.getElementById("agentgrid");
-  var curAgent = 0;
-
-  function renderAgents(){
-    agentgrid.innerHTML = "";
-    AGENTS.forEach(function(a, i){
-      var d = document.createElement("div");
-      d.className = "agent" + (i === curAgent ? " on" : "");
-      d.innerHTML =
-        '<div class="row1"><div class="ic">' + a.ic + '</div><h4>' + a.name + '</h4>' +
-        '<span class="pill ' + (a.on ? "ok" : "off") + '">' + (a.on ? "公開中" : "停止中") + '</span>' +
-        '<button class="toggle' + (a.on ? "" : " off") + '" data-i="' + i + '" aria-label="公開切り替え"></button></div>' +
-        '<div class="meta"><b>用途</b>：' + a.use + '<br><b>公開範囲</b>：' + a.scope +
-        '<br><b>今月の利用</b>：' + a.uses + '　<b>最終更新</b>：' + a.updated + '</div>';
-      d.addEventListener("click", function(e){
-        if(e.target.classList.contains("toggle")){
-          a.on = !a.on; renderAgents(); return;
-        }
-        curAgent = i; renderAgents();
-      });
-      agentgrid.appendChild(d);
-    });
-    var a = AGENTS[curAgent];
-    document.getElementById("agdetail-title").textContent = a.name + "　の設定";
-    document.getElementById("agdetail-sub").textContent = a.use;
-    document.getElementById("agdetail-kv").innerHTML =
-      "<dt>参照テーブル</dt><dd>" + a.tables + "</dd>" +
-      "<dt>公開範囲</dt><dd>" + a.scope + "</dd>" +
-      "<dt>出力形式</dt><dd>" + a.out + "</dd>" +
-      "<dt>利用の制限</dt><dd>" + a.limit + "</dd>" +
-      "<dt>今月の利用</dt><dd>" + a.uses + "</dd>" +
-      "<dt>最終更新</dt><dd>" + a.updated + "　本社マーケティング部</dd>";
-    document.getElementById("agdetail-prompt").textContent = a.prompt;
-  }
-
-  /* ================= 営業所一覧 ================= */
-  var OFFICES = [
-    ["中央営業所",2,58,88,712,"03/14","ok"],
-    ["東営業所",2,54,84,648,"03/14","ok"],
-    ["北営業所",2,46,79,502,"03/14","ok"],
-    ["西営業所",2,44,77,468,"03/13","ok"],
-    ["南営業所",2,41,81,455,"03/14","ok"],
-    ["中央第二営業所",2,38,74,391,"03/13","ok"],
-    ["東第二営業所",2,35,72,357,"03/14","ok"],
-    ["北第二営業所",2,32,69,318,"03/12","ok"],
-    ["西第二営業所",2,30,71,304,"03/13","ok"],
-    ["南第二営業所",2,28,66,262,"03/12","ok"],
-    ["湾岸営業所",2,26,64,238,"03/13","ok"],
-    ["内陸営業所",2,24,61,201,"03/11","ok"],
-    ["山手営業所",2,12,48,86,"03/07","mid"],
-    ["高原営業所",1,9,44,61,"03/06","mid"],
-    ["離島営業所",1,6,39,32,"03/04","mid"],
-    ["新設営業所",2,3,12,14,"03/10","new"]
-  ];
-
-  var offbody = document.getElementById("offbody");
-  var offFilter = "all";
-  function renderOffices(){
-    offbody.innerHTML = "";
-    OFFICES.filter(function(o){ return offFilter === "all" || o[6] === offFilter; }).forEach(function(o){
-      var st = o[6] === "ok" ? '<span class="pill ok">順調</span>'
-             : o[6] === "mid" ? '<span class="pill mid">フォロー要</span>'
-             : '<span class="pill on">立ち上げ中</span>';
-      var tr = document.createElement("tr");
-      tr.innerHTML =
-        "<td>" + o[0] + "</td>" +
-        '<td class="ctr">' + o[1] + "名</td>" +
-        '<td class="num">' + o[2] + "名</td>" +
-        "<td><span class='mini'><i style='width:" + o[3] + "%'></i></span>" + o[3] + "%</td>" +
-        '<td class="num">' + o[4].toLocaleString() + "</td>" +
-        "<td>" + o[5] + "</td>" +
-        '<td class="ctr">' + st + "</td>";
-      offbody.appendChild(tr);
-    });
-  }
-  Array.prototype.forEach.call(document.querySelectorAll("#offfilters button"), function(b){
-    b.addEventListener("click", function(){
-      Array.prototype.forEach.call(document.querySelectorAll("#offfilters button"), function(x){ x.classList.remove("on"); });
-      b.classList.add("on"); offFilter = b.dataset.f; renderOffices();
-    });
+  document.getElementById("role").addEventListener("change", function(){
+    curRole = this.value; renderChat();
   });
 
-  /* ================= 利用状況（営業所別バー） ================= */
+  /* ========== SharePoint リスト ========== */
+  var SP = [
+    ["C-20418","中央3区","中央営業所","提案準備中","新料金プランの試算を持参","2028/04/12","佐藤","3月14日 9:12","#0f6cbd",
+     "保安点検時に使用量の減少を確認。試算を作って再訪する。前回訪問 2月28日。"],
+    ["C-11876","中央1区","中央営業所","提案準備中","使用量の推移を説明","2028/04/18","佐藤","3月13日 17:40","#0f6cbd",
+     "3ヶ月連続で使用量が減少。世帯構成の変化がないか確認する。"],
+    ["C-30251","中央5区","中央営業所","点検予定","点検時に切替を打診","2028/04/28","高橋","3月13日 11:05","#107c10",
+     "定期点検の予定あり。訪問のついでに新料金の案内を行う。"],
+    ["C-22940","中央2区","中央営業所","要フォロー","近隣の切替状況を確認","2028/04/22","高橋","3月12日 16:22","#107c10",
+     "近隣で切替が3件発生。動向を確認したうえで先手を打つ。"],
+    ["C-19733","中央4区","中央営業所","未着手","状況確認の電話","2028/04/09","鈴木","3月12日 8:55","#8661c5",
+     "前回訪問から8ヶ月が経過。まず電話で状況を確認する。"],
+    ["C-40112","東2区","東営業所","提案済み","返答待ち","2028/04/15","田中","3月11日 14:30","#c19c00",
+     "新料金プランを提案済み。ご家族と相談のうえ回答をいただく予定。"],
+    ["C-40876","東4区","東営業所","切替完了","フォローなし","—","田中","3月10日 10:18","#c19c00",
+     "新料金プランへの切替が完了。次回は定期点検時に接触。"],
+    ["C-51204","北1区","北営業所","要フォロー","不在が続くため書面を投函","2028/04/05","伊藤","3月9日 15:44","#a4262c",
+     "3回訪問するも不在。案内文書を投函して反応を待つ。"],
+    ["C-60338","西3区","西営業所","提案準備中","使用量の実績を整理","2028/04/20","渡辺","3月8日 13:02","#036c70",
+     "集合住宅。管理会社への説明も必要になる可能性あり。"],
+    ["C-70915","南2区","南営業所","未着手","初回訪問","2028/04/25","山本","3月7日 9:30","#5b2e91",
+     "契約更新が近い。初回の接触からになる。"]
+  ];
+  var spbody = document.getElementById("spbody");
+  var spSel = 0;
+  function stat(s){
+    var c = s === "切替完了" ? "ok" : (s === "要フォロー" ? "pr" : (s === "未着手" ? "off" : "pv"));
+    return '<span class="tagx '+c+'">'+s+'</span>';
+  }
+  function renderSP(){
+    spbody.innerHTML = "";
+    SP.forEach(function(r, i){
+      var tr = document.createElement("tr");
+      if(i === spSel){ tr.className = "sel"; }
+      tr.innerHTML =
+        '<td style="color:#a19f9d;">▤</td>' +
+        '<td><span class="lk">'+r[0]+'</span></td><td>'+r[1]+'</td><td>'+r[2]+'</td>' +
+        '<td>'+stat(r[3])+'</td><td>'+r[4]+'</td><td>'+r[5]+'</td>' +
+        '<td><div class="pcell"><span class="prs" style="background:'+r[8]+'">'+r[6].charAt(0)+'</span>'+r[6]+'</div></td>' +
+        '<td style="color:var(--gray);">'+r[7]+'</td>';
+      tr.addEventListener("click", function(){ spSel = i; renderSP(); });
+      spbody.appendChild(tr);
+    });
+    var r = SP[spSel];
+    document.getElementById("sppane").innerHTML =
+      '<h3>'+r[0]+'</h3><div class="sb">顧客・活動管理　／　'+r[2]+'</div>' +
+      '<dl>' +
+        '<dt>エリア</dt><dd>'+r[1]+'</dd>' +
+        '<dt>案件の状況</dt><dd>'+stat(r[3])+'</dd>' +
+        '<dt>次アクション</dt><dd>'+r[4]+'</dd>' +
+        '<dt>予定日</dt><dd>'+r[5]+'</dd>' +
+        '<dt>担当</dt><dd><div class="pcell"><span class="prs" style="background:'+r[8]+'">'+r[6].charAt(0)+'</span>'+r[6]+'</div></dd>' +
+        '<dt>メモ</dt><dd>'+r[9]+'</dd>' +
+        '<dt>更新日時</dt><dd>'+r[7]+'</dd>' +
+      '</dl>' +
+      '<div style="font-size:11px;color:var(--gray);margin-top:18px;border-top:1px solid var(--line2);padding-top:11px;line-height:1.7;">' +
+      '契約内容・使用量・点検履歴はこのリストには持たず、統合データベース側を参照します。</div>';
+  }
+
+  /* ========== 展開・定着 ========== */
+  var OFFICES = [
+    ["中央営業所",2,58,88,712,"ok"],["東営業所",2,54,84,648,"ok"],["北営業所",2,46,79,502,"ok"],
+    ["西営業所",2,44,77,468,"ok"],["南営業所",2,41,81,455,"ok"],["中央第二営業所",2,38,74,391,"ok"],
+    ["東第二営業所",2,35,72,357,"ok"],["北第二営業所",2,32,69,318,"ok"],["西第二営業所",2,30,71,304,"ok"],
+    ["南第二営業所",2,28,66,262,"ok"],["湾岸営業所",2,26,64,238,"ok"],["内陸営業所",2,24,61,201,"ok"],
+    ["山手営業所",2,12,48,86,"mid"],["高原営業所",1,9,44,61,"mid"],["離島営業所",1,6,39,32,"mid"],
+    ["新設営業所",2,3,12,14,"new"]
+  ];
+  var offbody = document.getElementById("offbody");
+  OFFICES.forEach(function(o){
+    var st = o[5] === "ok" ? '<span class="tagx ok">順調</span>'
+           : o[5] === "mid" ? '<span class="tagx pr">フォロー要</span>'
+           : '<span class="tagx pv">立ち上げ中</span>';
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td>"+o[0]+"</td><td class='c'>"+o[1]+"名</td><td class='n'>"+o[2]+"名</td>" +
+      "<td><span class='mini'><i style='width:"+o[3]+"%'></i></span>"+o[3]+"%</td>" +
+      "<td class='n'>"+o[4].toLocaleString()+"</td><td class='c'>"+st+"</td>";
+    offbody.appendChild(tr);
+  });
   var ub = document.getElementById("usagebars");
-  OFFICES.slice(0).sort(function(a,b){ return b[3] - a[3]; }).slice(0,10).forEach(function(o){
-    var cls = o[3] >= 70 ? "n" : (o[3] >= 55 ? "" : "o");
+  OFFICES.slice(0).sort(function(a,b){ return b[3]-a[3]; }).slice(0,10).forEach(function(o){
     var d = document.createElement("div");
-    d.className = "hbar";
-    d.innerHTML = "<span>" + o[0] + "</span><div class='track'><div class='fill " + cls +
-                  "' style='width:" + o[3] + "%'></div></div><span class='num'>" + o[3] + "%</span>";
+    d.className = "hb";
+    d.innerHTML = "<span>"+o[0]+"</span><div class='t'><div class='f' style='width:"+o[3]+"%'></div></div><span class='n'>"+o[3]+"%</span>";
     ub.appendChild(d);
   });
 
-  /* ================= 初期化 ================= */
-  renderAgents();
-  renderOffices();
-  applyRole();
   renderChat();
+  renderSP();
 })();
 </script>
 </body>
